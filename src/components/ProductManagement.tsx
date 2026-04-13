@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import ApiService from '../services/api';
-import { 
-  Plus, 
-  Search, 
-  Edit, 
-  Trash2, 
-  Package, 
+import {
+  Plus,
+  Search,
+  Edit,
+  Trash2,
+  Package,
   AlertTriangle,
   Filter,
   X,
@@ -46,6 +46,7 @@ export const ProductManagement: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
   const [sortBy, setSortBy] = useState('name');
   const [dbCategories, setDbCategories] = useState<Category[]>([]);
   const [dbSuppliers, setDbSuppliers] = useState<SupplierOption[]>([]);
@@ -152,15 +153,14 @@ export const ProductManagement: React.FC = () => {
   };
 
   const handleDeleteProduct = async (id: number) => {
-    if (window.confirm('Apakah Anda yakin ingin menghapus produk ini?')) {
-      try {
-        await ApiService.deleteProduct(id);
-        await loadProducts();
-        showToast('Produk berhasil dihapus');
-      } catch (error) {
-        console.error('Error deleting product:', error);
-        showToast('Gagal menghapus produk', false);
-      }
+    try {
+      await ApiService.deleteProduct(id);
+      await loadProducts();
+      setConfirmDeleteId(null);
+      showToast('Produk berhasil dihapus');
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      showToast('Gagal menghapus produk', false);
     }
   };
 
@@ -180,6 +180,21 @@ export const ProductManagement: React.FC = () => {
       {toast && (
         <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg text-white text-sm font-medium ${toast.ok ? 'bg-green-500' : 'bg-red-500'}`}>
           {toast.msg}
+        </div>
+      )}
+      {confirmDeleteId !== null && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-sm w-full p-6 shadow-xl">
+            <div className="flex items-center mb-4">
+              <AlertTriangle className="h-6 w-6 text-red-500 mr-3" />
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Konfirmasi Hapus</h3>
+            </div>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">Apakah Anda yakin ingin menghapus produk ini? Tindakan ini tidak dapat dibatalkan.</p>
+            <div className="flex space-x-3">
+              <button onClick={() => handleDeleteProduct(confirmDeleteId)} className="flex-1 bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors">Ya, Hapus</button>
+              <button onClick={() => setConfirmDeleteId(null)} className="flex-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 py-2 px-4 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Batal</button>
+            </div>
+          </div>
         </div>
       )}
       {/* Header */}
@@ -344,7 +359,7 @@ export const ProductManagement: React.FC = () => {
                         <Edit className="h-4 w-4" />
                       </button>
                       <button
-                        onClick={() => handleDeleteProduct(product.id)}
+                        onClick={() => setConfirmDeleteId(product.id)}
                         className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50"
                       >
                         <Trash2 className="h-4 w-4" />

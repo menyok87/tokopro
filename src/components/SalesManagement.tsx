@@ -276,6 +276,13 @@ export const SalesManagement: React.FC = () => {
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+              {filteredSales.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                    Tidak ada transaksi ditemukan
+                  </td>
+                </tr>
+              )}
               {filteredSales.map((sale) => (
                 <tr key={sale.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -363,10 +370,13 @@ const POSModal: React.FC<{
   );
 
   const addToCart = (product: Product) => {
+    if (product.stock_quantity === 0) return;
     const existingItem = cart.find(item => item.productId === product.id);
+    const currentQty = existingItem?.quantity || 0;
+    if (currentQty >= product.stock_quantity) return;
     if (existingItem) {
-      setCart(cart.map(item => 
-        item.productId === product.id 
+      setCart(cart.map(item =>
+        item.productId === product.id
           ? { ...item, quantity: item.quantity + 1, total: (item.quantity + 1) * item.price }
           : item
       ));
@@ -385,9 +395,12 @@ const POSModal: React.FC<{
     if (newQuantity <= 0) {
       setCart(cart.filter(item => item.productId !== productId));
     } else {
-      setCart(cart.map(item => 
-        item.productId === productId 
-          ? { ...item, quantity: newQuantity, total: newQuantity * item.price }
+      const product = products.find(p => p.id === productId);
+      const maxQty = product?.stock_quantity ?? Infinity;
+      const clamped = Math.min(newQuantity, maxQty);
+      setCart(cart.map(item =>
+        item.productId === productId
+          ? { ...item, quantity: clamped, total: clamped * item.price }
           : item
       ));
     }
@@ -450,32 +463,50 @@ const POSModal: React.FC<{
               </div>
 
               <div className="grid grid-cols-1 gap-2 max-h-80 overflow-y-auto">
-                {filteredProducts.map((product) => (
-                  <div
-                    key={product.id}
-                    className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
-                    onClick={() => addToCart(product)}
-                  >
-                    <div className="flex-1">
-                      <div className="font-medium text-gray-900">{product.name}</div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">{product.category_name}</div>
-                      <div className="text-sm font-medium text-green-600">
-                        {formatCurrency(product.selling_price)}
+                {filteredProducts.length === 0 ? (
+                  <p className="text-center text-gray-500 dark:text-gray-400 py-6">Produk tidak ditemukan</p>
+                ) : (
+                  filteredProducts.map((product) => {
+                    const cartItem = cart.find(i => i.productId === product.id);
+                    const isOutOfStock = product.stock_quantity === 0;
+                    const isMaxReached = cartItem !== undefined && cartItem.quantity >= product.stock_quantity;
+                    return (
+                      <div
+                        key={product.id}
+                        className={`flex items-center justify-between p-3 border rounded-lg transition-colors ${
+                          isOutOfStock || isMaxReached
+                            ? 'border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 opacity-60 cursor-not-allowed'
+                            : 'border-gray-200 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-pointer'
+                        }`}
+                        onClick={() => !isOutOfStock && !isMaxReached && addToCart(product)}
+                      >
+                        <div className="flex-1">
+                          <div className="font-medium text-gray-900 dark:text-gray-100">{product.name}</div>
+                          <div className="text-sm text-gray-500 dark:text-gray-400">{product.category_name}</div>
+                          <div className="text-sm font-medium text-green-600">
+                            {formatCurrency(product.selling_price)}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className={`text-sm font-medium ${isOutOfStock ? 'text-red-500' : 'text-gray-500 dark:text-gray-400'}`}>
+                            {isOutOfStock ? 'Habis' : `Stok: ${product.stock_quantity}`}
+                          </div>
+                          {cartItem && !isOutOfStock && (
+                            <div className="text-xs text-blue-600">Di keranjang: {cartItem.quantity}</div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">
-                      Stok: {product.stock_quantity}
-                    </div>
-                  </div>
-                ))}
+                    );
+                  })
+                )}
               </div>
             </div>
 
             {/* Cart and Checkout */}
             <div>
               <div className="mb-4">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Keranjang</h3>
-                <div className="border border-gray-200 rounded-lg p-4 max-h-60 overflow-y-auto">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Keranjang</h3>
+                <div className="border border-gray-200 dark:border-gray-600 rounded-lg p-4 max-h-60 overflow-y-auto dark:bg-gray-700/30">
                   {cart.length === 0 ? (
                     <p className="text-gray-500 text-center py-4">Keranjang kosong</p>
                   ) : (

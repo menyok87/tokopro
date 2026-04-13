@@ -82,14 +82,22 @@ export const Dashboard: React.FC = () => {
         .sort((a: any, b: any) => new Date(b.sale_date).getTime() - new Date(a.sale_date).getTime())
         .slice(0, 5);
 
-      // Top selling products (mock data for now)
-      const topSellingProducts = products
-        .sort((a: any, b: any) => b.stock_quantity - a.stock_quantity)
-        .slice(0, 5)
-        .map((product: any, index: number) => ({
-          ...product,
-          totalSold: Math.floor(Math.random() * 100) + 10 // Mock data
-        }));
+      // Top selling products — aggregate from real sale items
+      const productSoldMap: Record<number, number> = {};
+      sales.forEach((sale: any) => {
+        (sale.items || []).forEach((item: any) => {
+          if (item.product_id) {
+            productSoldMap[item.product_id] = (productSoldMap[item.product_id] || 0) + item.quantity;
+          }
+        });
+      });
+      const productMap: Record<number, any> = {};
+      products.forEach((p: any) => { productMap[p.id] = p; });
+      const topSellingProducts = Object.entries(productSoldMap)
+        .map(([pid, qty]) => ({ ...productMap[Number(pid)], totalSold: qty }))
+        .filter(p => p.name)
+        .sort((a: any, b: any) => b.totalSold - a.totalSold)
+        .slice(0, 5);
 
       setStats({
         totalRevenue,
@@ -152,16 +160,14 @@ export const Dashboard: React.FC = () => {
             </div>
           </div>
           <div className="mt-4 flex items-center text-sm">
-            <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
-            <span className="text-green-600 font-medium">12.5%</span>
-            <span className="text-gray-500 ml-1">dari bulan lalu</span>
+            <span className="text-gray-500 dark:text-gray-400">Semua transaksi</span>
           </div>
         </div>
 
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Keuntungan</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Keuntungan Kotor</p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">{formatCurrency(totalProfit)}</p>
             </div>
             <div className="p-3 bg-blue-50 rounded-full">
@@ -169,9 +175,7 @@ export const Dashboard: React.FC = () => {
             </div>
           </div>
           <div className="mt-4 flex items-center text-sm">
-            <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
-            <span className="text-green-600 font-medium">8.2%</span>
-            <span className="text-gray-500 ml-1">dari bulan lalu</span>
+            <span className="text-gray-500 dark:text-gray-400">Setelah dikurangi HPP</span>
           </div>
         </div>
 
@@ -202,9 +206,7 @@ export const Dashboard: React.FC = () => {
             </div>
           </div>
           <div className="mt-4 flex items-center text-sm">
-            <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
-            <span className="text-green-600 font-medium">3.1%</span>
-            <span className="text-gray-500 ml-1">dari bulan lalu</span>
+            <span className="text-gray-500 dark:text-gray-400">Terdaftar</span>
           </div>
         </div>
       </div>
@@ -266,25 +268,32 @@ export const Dashboard: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Produk Terlaris</h3>
-          <div className="space-y-4">
-            {stats.topSellingProducts.map((product: any, index: number) => (
-              <div key={product.id} className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                    <span className="text-sm font-medium text-blue-600">{index + 1}</span>
+          {stats.topSellingProducts.length === 0 ? (
+            <div className="text-center py-6">
+              <ShoppingCart className="h-10 w-10 text-gray-300 mx-auto mb-2" />
+              <p className="text-gray-500 dark:text-gray-400">Belum ada data penjualan</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {stats.topSellingProducts.map((product: any, index: number) => (
+                <div key={product.id} className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+                      <span className="text-sm font-medium text-blue-600">{index + 1}</span>
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900 dark:text-white">{product.name}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{product.category_name}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium text-gray-900 dark:text-white">{product.name}</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{product.category_name}</p>
+                  <div className="text-right">
+                    <p className="font-medium text-gray-900 dark:text-white">{product.totalSold} terjual</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{formatCurrency(product.selling_price)}</p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="font-medium text-gray-900 dark:text-white">{product.totalSold} terjual</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">{formatCurrency(product.selling_price)}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700">

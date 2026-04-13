@@ -1,12 +1,23 @@
-const express = require('express');
+import express from 'express';
+import Customer from '../models/Customer.js';
+
 const router = express.Router();
-const Customer = require('../models/Customer');
 
 // Get all customers
 router.get('/', async (req, res) => {
   try {
     const customers = await Customer.getAll();
     res.json(customers);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Find customer by phone (must be before /:id)
+router.get('/search/phone/:phone', async (req, res) => {
+  try {
+    const customer = await Customer.findByPhone(req.params.phone);
+    res.json(customer || null);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -57,16 +68,6 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-// Find customer by phone
-router.get('/search/phone/:phone', async (req, res) => {
-  try {
-    const customer = await Customer.findByPhone(req.params.phone);
-    res.json(customer || null);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
 // Get customer sales history
 router.get('/:id/sales', async (req, res) => {
   try {
@@ -77,4 +78,4 @@ router.get('/:id/sales', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

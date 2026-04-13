@@ -1,4 +1,4 @@
-const { pool } = require('../database/connection');
+import { pool } from '../database/connection.js';
 
 class Sale {
   static async getAll(limit = 100, offset = 0) {
@@ -10,7 +10,6 @@ class Sale {
       LIMIT $1 OFFSET $2
     `, [limit, offset]);
 
-    // Get sale items for each sale
     for (let sale of rows) {
       const { rows: items } = await pool.query(`
         SELECT si.*, p.name as product_name
@@ -57,7 +56,6 @@ class Sale {
     try {
       await client.query('BEGIN');
 
-      // Insert sale
       const { rows: saleRows } = await client.query(`
         INSERT INTO sales
         (invoice_number, customer_id, customer_name, customer_phone, subtotal, tax_amount, total_amount, payment_method, user_id)
@@ -67,29 +65,24 @@ class Sale {
 
       const saleId = saleRows[0].id;
 
-      // Insert sale items and update stock
       for (const item of items) {
-        // Insert sale item
         await client.query(`
           INSERT INTO sale_items (sale_id, product_id, product_name, quantity, unit_price, total_price)
           VALUES ($1, $2, $3, $4, $5, $6)
         `, [saleId, item.product_id, item.product_name, item.quantity, item.unit_price, item.total_price]);
 
-        // Update product stock
         await client.query(`
           UPDATE products
           SET stock_quantity = stock_quantity - $1
           WHERE id = $2
         `, [item.quantity, item.product_id]);
 
-        // Record stock movement
         await client.query(`
           INSERT INTO stock_movements (product_id, movement_type, quantity, reference_type, reference_id, user_id)
           VALUES ($1, 'out', $2, 'sale', $3, $4)
         `, [item.product_id, item.quantity, saleId, user_id]);
       }
 
-      // Update customer total purchases if customer exists
       if (customer_id) {
         await client.query(`
           UPDATE customers
@@ -136,4 +129,4 @@ class Sale {
   }
 }
 
-module.exports = Sale;
+export default Sale;

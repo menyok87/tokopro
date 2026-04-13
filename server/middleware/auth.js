@@ -1,5 +1,5 @@
-const jwt = require('jsonwebtoken');
-const { pool } = require('../database/connection');
+import jwt from 'jsonwebtoken';
+import { pool } from '../database/connection.js';
 
 const authenticateToken = async (req, res, next) => {
   const authHeader = req.headers['authorization'];
@@ -11,7 +11,7 @@ const authenticateToken = async (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
+
     // Verify user still exists in database
     const { rows: users } = await pool.query(
       'SELECT id, username, email, role FROM users WHERE id = $1',
@@ -44,4 +44,4 @@ const requireRole = (roles) => {
   };
 };
 
-module.exports = { authenticateToken, requireRole };
+export { authenticateToken, requireRole };

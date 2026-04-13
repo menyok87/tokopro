@@ -1,4 +1,4 @@
-const { pool } = require('../database/connection');
+import { pool } from '../database/connection.js';
 
 class Product {
   static async getAll() {
@@ -67,19 +67,16 @@ class Product {
     try {
       await client.query('BEGIN');
 
-      // Get current stock
       const { rows: currentProduct } = await client.query(
         'SELECT stock_quantity FROM products WHERE id = $1', [id]
       );
       const currentStock = currentProduct[0].stock_quantity;
       const quantity = newStock - currentStock;
 
-      // Update product stock
       await client.query(
         'UPDATE products SET stock_quantity = $1 WHERE id = $2', [newStock, id]
       );
 
-      // Record stock movement
       await client.query(`
         INSERT INTO stock_movements (product_id, movement_type, quantity, reference_type, user_id)
         VALUES ($1, $2, $3, $4, $5)
@@ -107,4 +104,4 @@ class Product {
   }
 }
 
-module.exports = Product;
+export default Product;

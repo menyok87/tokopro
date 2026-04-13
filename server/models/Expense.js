@@ -1,4 +1,4 @@
-const { pool } = require('../database/connection');
+import { pool } from '../database/connection.js';
 
 class Expense {
   static async getAll() {
@@ -83,4 +83,4 @@ class Expense {
   }
 }
 
-module.exports = Expense;
+export default Expense;

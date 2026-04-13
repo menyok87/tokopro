@@ -1,5 +1,5 @@
-const { pool } = require('../database/connection');
-const MigrationRunner = require('../database/migrationRunner');
+import { pool } from '../database/connection.js';
+import MigrationRunner from '../database/migrationRunner.js';
 
 async function setupDatabase() {
   try {
@@ -41,8 +41,4 @@ async function rollbackMigration() {
   }
 }
 
-module.exports = {
-  setupDatabase,
-  getMigrationStatus,
-  rollbackMigration
-};
+export { setupDatabase, getMigrationStatus, rollbackMigration };

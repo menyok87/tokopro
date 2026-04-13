@@ -1,8 +1,8 @@
-const express = require('express');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const { pool } = require('../database/connection');
-const { authenticateToken } = require('../middleware/auth');
+import express from 'express';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import { pool } from '../database/connection.js';
+import { authenticateToken } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -20,7 +20,6 @@ router.post('/register', async (req, res) => {
   try {
     const { username, email, password, role = 'cashier' } = req.body;
 
-    // Validation
     if (!username || !email || !password) {
       return res.status(400).json({ error: 'Username, email, and password are required' });
     }
@@ -29,7 +28,6 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ error: 'Password must be at least 6 characters long' });
     }
 
-    // Check if user already exists
     const { rows: existingUsers } = await pool.query(
       'SELECT id FROM users WHERE username = $1 OR email = $2',
       [username, email]
@@ -39,30 +37,21 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ error: 'Username or email already exists' });
     }
 
-    // Hash password
     const saltRounds = 12;
     const passwordHash = await bcrypt.hash(password, saltRounds);
 
-    // Insert new user
     const { rows } = await pool.query(
       'INSERT INTO users (username, email, password_hash, role) VALUES ($1, $2, $3, $4) RETURNING id',
       [username, email, passwordHash, role]
     );
 
     const newUserId = rows[0].id;
-
-    // Generate token
     const token = generateToken(newUserId, username, role);
 
     res.status(201).json({
       message: 'User registered successfully',
       token,
-      user: {
-        id: newUserId,
-        username,
-        email,
-        role
-      }
+      user: { id: newUserId, username, email, role }
     });
   } catch (error) {
     console.error('Registration error:', error);
@@ -79,7 +68,6 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ error: 'Username and password are required' });
     }
 
-    // Find user by username or email
     const { rows: users } = await pool.query(
       'SELECT id, username, email, password_hash, role FROM users WHERE username = $1 OR email = $2',
       [username, username]
@@ -90,17 +78,13 @@ router.post('/login', async (req, res) => {
     }
 
     const user = users[0];
-
-    // Verify password
     const isValidPassword = await bcrypt.compare(password, user.password_hash);
     if (!isValidPassword) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    // Generate token
     const token = generateToken(user.id, user.username, user.role);
 
-    // Update last login (optional)
     await pool.query(
       'UPDATE users SET updated_at = CURRENT_TIMESTAMP WHERE id = $1',
       [user.id]
@@ -109,12 +93,7 @@ router.post('/login', async (req, res) => {
     res.json({
       message: 'Login successful',
       token,
-      user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        role: user.role
-      }
+      user: { id: user.id, username: user.username, email: user.email, role: user.role }
     });
   } catch (error) {
     console.error('Login error:', error);
@@ -151,7 +130,6 @@ router.put('/profile', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'Email is required' });
     }
 
-    // Check if email is already taken by another user
     const { rows: existingUsers } = await pool.query(
       'SELECT id FROM users WHERE email = $1 AND id != $2',
       [email, userId]
@@ -161,22 +139,17 @@ router.put('/profile', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'Email already exists' });
     }
 
-    // Update user
     await pool.query(
       'UPDATE users SET email = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
       [email, userId]
     );
 
-    // Fetch updated user
     const { rows: users } = await pool.query(
       'SELECT id, username, email, role FROM users WHERE id = $1',
       [userId]
     );
 
-    res.json({
-      message: 'Profile updated successfully',
-      user: users[0]
-    });
+    res.json({ message: 'Profile updated successfully', user: users[0] });
   } catch (error) {
     console.error('Profile update error:', error);
     res.status(500).json({ error: 'Failed to update profile' });
@@ -197,7 +170,6 @@ router.put('/change-password', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'New password must be at least 6 characters long' });
     }
 
-    // Get current password hash
     const { rows: users } = await pool.query(
       'SELECT password_hash FROM users WHERE id = $1',
       [userId]
@@ -207,17 +179,14 @@ router.put('/change-password', authenticateToken, async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // Verify current password
     const isValidPassword = await bcrypt.compare(currentPassword, users[0].password_hash);
     if (!isValidPassword) {
       return res.status(401).json({ error: 'Current password is incorrect' });
     }
 
-    // Hash new password
     const saltRounds = 12;
     const newPasswordHash = await bcrypt.hash(newPassword, saltRounds);
 
-    // Update password
     await pool.query(
       'UPDATE users SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
       [newPasswordHash, userId]
@@ -230,13 +199,10 @@ router.put('/change-password', authenticateToken, async (req, res) => {
   }
 });
 
-// Logout (client-side token removal, but we can log it)
+// Logout
 router.post('/logout', authenticateToken, async (req, res) => {
   try {
-    // In a more sophisticated setup, you might want to blacklist the token
-    // For now, we'll just log the logout
     console.log(`User ${req.user.username} logged out at ${new Date()}`);
-
     res.json({ message: 'Logout successful' });
   } catch (error) {
     console.error('Logout error:', error);
@@ -244,4 +210,4 @@ router.post('/logout', authenticateToken, async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

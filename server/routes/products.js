@@ -1,11 +1,22 @@
-const express = require('express');
+import express from 'express';
+import Product from '../models/Product.js';
+
 const router = express.Router();
-const Product = require('../models/Product');
 
 // Get all products
 router.get('/', async (req, res) => {
   try {
     const products = await Product.getAll();
+    res.json(products);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get low stock products (must be before /:id)
+router.get('/alerts/low-stock', async (req, res) => {
+  try {
+    const products = await Product.getLowStock();
     res.json(products);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -69,14 +80,4 @@ router.patch('/:id/stock', async (req, res) => {
   }
 });
 
-// Get low stock products
-router.get('/alerts/low-stock', async (req, res) => {
-  try {
-    const products = await Product.getLowStock();
-    res.json(products);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-module.exports = router;
+export default router;

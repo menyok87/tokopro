@@ -1,4 +1,4 @@
-const { pool } = require('../database/connection');
+import { pool } from '../database/connection.js';
 
 class Customer {
   static async getAll() {
@@ -66,4 +66,4 @@ class Customer {
   }
 }
 
-module.exports = Customer;
+export default Customer;

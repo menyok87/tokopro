@@ -1,5 +1,7 @@
-const { Pool } = require('pg');
-require('dotenv').config();
+import pg from 'pg';
+import 'dotenv/config';
+
+const { Pool } = pg;
 
 const pool = new Pool({
   host: process.env.DB_HOST || 'localhost',
@@ -26,4 +28,4 @@ async function testConnection() {
   }
 }
 
-module.exports = { pool, testConnection };
+export { pool, testConnection };

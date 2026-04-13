@@ -1,9 +1,15 @@
-const express = require('express');
-const cors = require('cors');
-const { testConnection } = require('./database/connection');
-const { setupDatabase } = require('./utils/dbSetup');
-const { authenticateToken } = require('./middleware/auth');
-require('dotenv').config();
+import express from 'express';
+import cors from 'cors';
+import 'dotenv/config';
+import { testConnection } from './database/connection.js';
+import { setupDatabase } from './utils/dbSetup.js';
+import { authenticateToken } from './middleware/auth.js';
+import authRoutes from './routes/auth.js';
+import productRoutes from './routes/products.js';
+import saleRoutes from './routes/sales.js';
+import customerRoutes from './routes/customers.js';
+import supplierRoutes from './routes/suppliers.js';
+import expenseRoutes from './routes/expenses.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -32,19 +38,19 @@ initializeApp();
 
 // Routes
 // Public routes
-app.use('/api/auth', require('./routes/auth'));
+app.use('/api/auth', authRoutes);
 
 // Protected routes (require authentication)
-app.use('/api/products', authenticateToken, require('./routes/products'));
-app.use('/api/sales', authenticateToken, require('./routes/sales'));
-app.use('/api/customers', authenticateToken, require('./routes/customers'));
-app.use('/api/suppliers', authenticateToken, require('./routes/suppliers'));
-app.use('/api/expenses', authenticateToken, require('./routes/expenses'));
+app.use('/api/products', authenticateToken, productRoutes);
+app.use('/api/sales', authenticateToken, saleRoutes);
+app.use('/api/customers', authenticateToken, customerRoutes);
+app.use('/api/suppliers', authenticateToken, supplierRoutes);
+app.use('/api/expenses', authenticateToken, expenseRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
+  res.json({
+    status: 'OK',
     message: 'Retail Accounting API is running',
     timestamp: new Date().toISOString()
   });
@@ -53,9 +59,9 @@ app.get('/api/health', (req, res) => {
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({ 
+  res.status(500).json({
     error: 'Something went wrong!',
-    message: err.message 
+    message: err.message
   });
 });
 
@@ -69,4 +75,4 @@ app.listen(PORT, () => {
   console.log(`📊 API Documentation: http://localhost:${PORT}/api/health`);
 });
 
-module.exports = app;
+export default app;

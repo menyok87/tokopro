@@ -13,8 +13,8 @@ const authenticateToken = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
     // Verify user still exists in database
-    const [users] = await pool.execute(
-      'SELECT id, username, email, role FROM users WHERE id = ?',
+    const { rows: users } = await pool.query(
+      'SELECT id, username, email, role FROM users WHERE id = $1',
       [decoded.userId]
     );
 

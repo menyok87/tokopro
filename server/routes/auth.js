@@ -30,8 +30,8 @@ router.post('/register', async (req, res) => {
     }
 
     // Check if user already exists
-    const [existingUsers] = await pool.execute(
-      'SELECT id FROM users WHERE username = ? OR email = ?',
+    const { rows: existingUsers } = await pool.query(
+      'SELECT id FROM users WHERE username = $1 OR email = $2',
       [username, email]
     );
 
@@ -44,19 +44,21 @@ router.post('/register', async (req, res) => {
     const passwordHash = await bcrypt.hash(password, saltRounds);
 
     // Insert new user
-    const [result] = await pool.execute(
-      'INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)',
+    const { rows } = await pool.query(
+      'INSERT INTO users (username, email, password_hash, role) VALUES ($1, $2, $3, $4) RETURNING id',
       [username, email, passwordHash, role]
     );
 
+    const newUserId = rows[0].id;
+
     // Generate token
-    const token = generateToken(result.insertId, username, role);
+    const token = generateToken(newUserId, username, role);
 
     res.status(201).json({
       message: 'User registered successfully',
       token,
       user: {
-        id: result.insertId,
+        id: newUserId,
         username,
         email,
         role
@@ -78,8 +80,8 @@ router.post('/login', async (req, res) => {
     }
 
     // Find user by username or email
-    const [users] = await pool.execute(
-      'SELECT id, username, email, password_hash, role FROM users WHERE username = ? OR email = ?',
+    const { rows: users } = await pool.query(
+      'SELECT id, username, email, password_hash, role FROM users WHERE username = $1 OR email = $2',
       [username, username]
     );
 
@@ -99,8 +101,8 @@ router.post('/login', async (req, res) => {
     const token = generateToken(user.id, user.username, user.role);
 
     // Update last login (optional)
-    await pool.execute(
-      'UPDATE users SET updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+    await pool.query(
+      'UPDATE users SET updated_at = CURRENT_TIMESTAMP WHERE id = $1',
       [user.id]
     );
 
@@ -123,8 +125,8 @@ router.post('/login', async (req, res) => {
 // Get current user profile
 router.get('/profile', authenticateToken, async (req, res) => {
   try {
-    const [users] = await pool.execute(
-      'SELECT id, username, email, role, created_at FROM users WHERE id = ?',
+    const { rows: users } = await pool.query(
+      'SELECT id, username, email, role, created_at FROM users WHERE id = $1',
       [req.user.id]
     );
 
@@ -150,8 +152,8 @@ router.put('/profile', authenticateToken, async (req, res) => {
     }
 
     // Check if email is already taken by another user
-    const [existingUsers] = await pool.execute(
-      'SELECT id FROM users WHERE email = ? AND id != ?',
+    const { rows: existingUsers } = await pool.query(
+      'SELECT id FROM users WHERE email = $1 AND id != $2',
       [email, userId]
     );
 
@@ -160,14 +162,14 @@ router.put('/profile', authenticateToken, async (req, res) => {
     }
 
     // Update user
-    await pool.execute(
-      'UPDATE users SET email = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+    await pool.query(
+      'UPDATE users SET email = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
       [email, userId]
     );
 
     // Fetch updated user
-    const [users] = await pool.execute(
-      'SELECT id, username, email, role FROM users WHERE id = ?',
+    const { rows: users } = await pool.query(
+      'SELECT id, username, email, role FROM users WHERE id = $1',
       [userId]
     );
 
@@ -196,8 +198,8 @@ router.put('/change-password', authenticateToken, async (req, res) => {
     }
 
     // Get current password hash
-    const [users] = await pool.execute(
-      'SELECT password_hash FROM users WHERE id = ?',
+    const { rows: users } = await pool.query(
+      'SELECT password_hash FROM users WHERE id = $1',
       [userId]
     );
 
@@ -216,8 +218,8 @@ router.put('/change-password', authenticateToken, async (req, res) => {
     const newPasswordHash = await bcrypt.hash(newPassword, saltRounds);
 
     // Update password
-    await pool.execute(
-      'UPDATE users SET password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+    await pool.query(
+      'UPDATE users SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
       [newPasswordHash, userId]
     );
 
@@ -234,7 +236,7 @@ router.post('/logout', authenticateToken, async (req, res) => {
     // In a more sophisticated setup, you might want to blacklist the token
     // For now, we'll just log the logout
     console.log(`User ${req.user.username} logged out at ${new Date()}`);
-    
+
     res.json({ message: 'Logout successful' });
   } catch (error) {
     console.error('Logout error:', error);

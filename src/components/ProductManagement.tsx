@@ -37,6 +37,12 @@ export const ProductManagement: React.FC = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [sortBy, setSortBy] = useState('name');
+  const [toast, setToast] = useState<{msg: string; ok: boolean} | null>(null);
+
+  const showToast = (msg: string, ok = true) => {
+    setToast({ msg, ok });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -52,7 +58,7 @@ export const ProductManagement: React.FC = () => {
       setProducts(data);
     } catch (error) {
       console.error('Error loading products:', error);
-      alert('Gagal memuat data produk');
+      showToast('Gagal memuat data produk', false);
     } finally {
       setLoading(false);
     }
@@ -102,10 +108,10 @@ export const ProductManagement: React.FC = () => {
       });
       await loadProducts();
       setShowAddModal(false);
-      alert('Produk berhasil ditambahkan');
+      showToast('Produk berhasil ditambahkan');
     } catch (error) {
       console.error('Error adding product:', error);
-      alert('Gagal menambahkan produk');
+      showToast('Gagal menambahkan produk', false);
     }
   };
 
@@ -124,10 +130,10 @@ export const ProductManagement: React.FC = () => {
       });
       await loadProducts();
       setEditingProduct(null);
-      alert('Produk berhasil diperbarui');
+      showToast('Produk berhasil diperbarui');
     } catch (error) {
       console.error('Error updating product:', error);
-      alert('Gagal memperbarui produk');
+      showToast('Gagal memperbarui produk', false);
     }
   };
 
@@ -136,10 +142,10 @@ export const ProductManagement: React.FC = () => {
       try {
         await ApiService.deleteProduct(id);
         await loadProducts();
-        alert('Produk berhasil dihapus');
+        showToast('Produk berhasil dihapus');
       } catch (error) {
         console.error('Error deleting product:', error);
-        alert('Gagal menghapus produk');
+        showToast('Gagal menghapus produk', false);
       }
     }
   };
@@ -157,6 +163,11 @@ export const ProductManagement: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {toast && (
+        <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg text-white text-sm font-medium ${toast.ok ? 'bg-green-500' : 'bg-red-500'}`}>
+          {toast.msg}
+        </div>
+      )}
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

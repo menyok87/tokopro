@@ -49,6 +49,12 @@ export const SalesManagement: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showPOSModal, setShowPOSModal] = useState(false);
   const [selectedDateRange, setSelectedDateRange] = useState('today');
+  const [toast, setToast] = useState<{msg: string; ok: boolean} | null>(null);
+
+  const showToast = (msg: string, ok = true) => {
+    setToast({ msg, ok });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -64,7 +70,7 @@ export const SalesManagement: React.FC = () => {
       setSales(data);
     } catch (error) {
       console.error('Error loading sales:', error);
-      alert('Gagal memuat data penjualan');
+      showToast('Gagal memuat data penjualan', false);
     } finally {
       setLoading(false);
     }
@@ -130,10 +136,10 @@ export const SalesManagement: React.FC = () => {
       await loadSales();
       await loadProducts(); // Refresh products to update stock
       setShowPOSModal(false);
-      alert('Penjualan berhasil disimpan');
+      showToast('Penjualan berhasil disimpan');
     } catch (error) {
       console.error('Error creating sale:', error);
-      alert('Gagal menyimpan penjualan');
+      showToast('Gagal menyimpan penjualan', false);
     }
   };
 
@@ -148,6 +154,11 @@ export const SalesManagement: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {toast && (
+        <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg text-white text-sm font-medium ${toast.ok ? 'bg-green-500' : 'bg-red-500'}`}>
+          {toast.msg}
+        </div>
+      )}
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

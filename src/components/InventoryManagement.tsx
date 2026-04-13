@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { 
-  Package, 
-  AlertTriangle, 
-  Search, 
-  Filter, 
-  TrendingUp, 
+import {
+  Package,
+  AlertTriangle,
+  Search,
+  Filter,
+  TrendingUp,
   TrendingDown,
   BarChart3,
   RefreshCw,
-  Edit
+  Edit,
+  Trash2
 } from 'lucide-react';
 
 export const InventoryManagement: React.FC = () => {
@@ -18,6 +19,12 @@ export const InventoryManagement: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [showLowStock, setShowLowStock] = useState(false);
   const [sortBy, setSortBy] = useState('name');
+  const [toast, setToast] = useState<{msg: string; ok: boolean} | null>(null);
+
+  const showToast = (msg: string, ok = true) => {
+    setToast({ msg, ok });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -57,8 +64,20 @@ export const InventoryManagement: React.FC = () => {
     dispatch({ type: 'UPDATE_STOCK', payload: { productId, newStock } });
   };
 
+  const handleDeleteProduct = (productId: string) => {
+    if (window.confirm('Apakah Anda yakin ingin menghapus produk ini?')) {
+      dispatch({ type: 'DELETE_PRODUCT', payload: productId });
+      showToast('Produk berhasil dihapus');
+    }
+  };
+
   return (
     <div className="space-y-6">
+      {toast && (
+        <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg text-white text-sm font-medium ${toast.ok ? 'bg-green-500' : 'bg-red-500'}`}>
+          {toast.msg}
+        </div>
+      )}
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -255,11 +274,20 @@ export const InventoryManagement: React.FC = () => {
                     )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <StockUpdateButton
-                      productId={product.id}
-                      currentStock={product.stock}
-                      onUpdate={handleStockUpdate}
-                    />
+                    <div className="flex items-center space-x-2">
+                      <StockUpdateButton
+                        productId={product.id}
+                        currentStock={product.stock}
+                        onUpdate={handleStockUpdate}
+                      />
+                      <button
+                        onClick={() => handleDeleteProduct(product.id)}
+                        className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50"
+                        title="Hapus produk"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

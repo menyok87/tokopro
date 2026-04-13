@@ -33,6 +33,12 @@ export const CustomerManagement: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
+  const [toast, setToast] = useState<{msg: string; ok: boolean} | null>(null);
+
+  const showToast = (msg: string, ok = true) => {
+    setToast({ msg, ok });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -48,7 +54,7 @@ export const CustomerManagement: React.FC = () => {
       setCustomers(data);
     } catch (error) {
       console.error('Error loading customers:', error);
-      alert('Gagal memuat data pelanggan');
+      showToast('Gagal memuat data pelanggan', false);
     } finally {
       setLoading(false);
     }
@@ -69,10 +75,10 @@ export const CustomerManagement: React.FC = () => {
       await ApiService.createCustomer(customerData);
       await loadCustomers();
       setShowAddModal(false);
-      alert('Pelanggan berhasil ditambahkan');
+      showToast('Pelanggan berhasil ditambahkan');
     } catch (error) {
       console.error('Error adding customer:', error);
-      alert('Gagal menambahkan pelanggan');
+      showToast('Gagal menambahkan pelanggan', false);
     }
   };
 
@@ -81,10 +87,10 @@ export const CustomerManagement: React.FC = () => {
       await ApiService.updateCustomer(customer.id, customerData);
       await loadCustomers();
       setEditingCustomer(null);
-      alert('Pelanggan berhasil diperbarui');
+      showToast('Pelanggan berhasil diperbarui');
     } catch (error) {
       console.error('Error updating customer:', error);
-      alert('Gagal memperbarui pelanggan');
+      showToast('Gagal memperbarui pelanggan', false);
     }
   };
 
@@ -93,10 +99,10 @@ export const CustomerManagement: React.FC = () => {
       try {
         await ApiService.deleteCustomer(id);
         await loadCustomers();
-        alert('Pelanggan berhasil dihapus');
+        showToast('Pelanggan berhasil dihapus');
       } catch (error) {
         console.error('Error deleting customer:', error);
-        alert('Gagal menghapus pelanggan');
+        showToast('Gagal menghapus pelanggan', false);
       }
     }
   };
@@ -116,6 +122,11 @@ export const CustomerManagement: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {toast && (
+        <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg text-white text-sm font-medium ${toast.ok ? 'bg-green-500' : 'bg-red-500'}`}>
+          {toast.msg}
+        </div>
+      )}
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

@@ -40,6 +40,12 @@ export const ExpenseManagement: React.FC = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [selectedDateRange, setSelectedDateRange] = useState('month');
+  const [toast, setToast] = useState<{msg: string; ok: boolean} | null>(null);
+
+  const showToast = (msg: string, ok = true) => {
+    setToast({ msg, ok });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -55,7 +61,7 @@ export const ExpenseManagement: React.FC = () => {
       setExpenses(data);
     } catch (error) {
       console.error('Error loading expenses:', error);
-      alert('Gagal memuat data pengeluaran');
+      showToast('Gagal memuat data pengeluaran', false);
     } finally {
       setLoading(false);
     }
@@ -114,10 +120,10 @@ export const ExpenseManagement: React.FC = () => {
       });
       await loadExpenses();
       setShowAddModal(false);
-      alert('Pengeluaran berhasil ditambahkan');
+      showToast('Pengeluaran berhasil ditambahkan');
     } catch (error) {
       console.error('Error adding expense:', error);
-      alert('Gagal menambahkan pengeluaran');
+      showToast('Gagal menambahkan pengeluaran', false);
     }
   };
 
@@ -132,10 +138,10 @@ export const ExpenseManagement: React.FC = () => {
       });
       await loadExpenses();
       setEditingExpense(null);
-      alert('Pengeluaran berhasil diperbarui');
+      showToast('Pengeluaran berhasil diperbarui');
     } catch (error) {
       console.error('Error updating expense:', error);
-      alert('Gagal memperbarui pengeluaran');
+      showToast('Gagal memperbarui pengeluaran', false);
     }
   };
 
@@ -144,10 +150,10 @@ export const ExpenseManagement: React.FC = () => {
       try {
         await ApiService.deleteExpense(id);
         await loadExpenses();
-        alert('Pengeluaran berhasil dihapus');
+        showToast('Pengeluaran berhasil dihapus');
       } catch (error) {
         console.error('Error deleting expense:', error);
-        alert('Gagal menghapus pengeluaran');
+        showToast('Gagal menghapus pengeluaran', false);
       }
     }
   };
@@ -163,6 +169,11 @@ export const ExpenseManagement: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {toast && (
+        <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg text-white text-sm font-medium ${toast.ok ? 'bg-green-500' : 'bg-red-500'}`}>
+          {toast.msg}
+        </div>
+      )}
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

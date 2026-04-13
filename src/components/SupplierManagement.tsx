@@ -32,6 +32,12 @@ export const SupplierManagement: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
+  const [toast, setToast] = useState<{msg: string; ok: boolean} | null>(null);
+
+  const showToast = (msg: string, ok = true) => {
+    setToast({ msg, ok });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   const loadSuppliers = async () => {
     try {
@@ -40,7 +46,7 @@ export const SupplierManagement: React.FC = () => {
       setSuppliers(data);
     } catch (error) {
       console.error('Error loading suppliers:', error);
-      alert('Gagal memuat data supplier');
+      showToast('Gagal memuat data supplier', false);
     } finally {
       setLoading(false);
     }
@@ -61,10 +67,10 @@ export const SupplierManagement: React.FC = () => {
       await ApiService.createSupplier(supplierData);
       await loadSuppliers();
       setShowAddModal(false);
-      alert('Supplier berhasil ditambahkan');
+      showToast('Supplier berhasil ditambahkan');
     } catch (error) {
       console.error('Error adding supplier:', error);
-      alert('Gagal menambahkan supplier');
+      showToast('Gagal menambahkan supplier', false);
     }
   };
 
@@ -73,10 +79,10 @@ export const SupplierManagement: React.FC = () => {
       await ApiService.updateSupplier(supplier.id, supplierData);
       await loadSuppliers();
       setEditingSupplier(null);
-      alert('Supplier berhasil diperbarui');
+      showToast('Supplier berhasil diperbarui');
     } catch (error) {
       console.error('Error updating supplier:', error);
-      alert('Gagal memperbarui supplier');
+      showToast('Gagal memperbarui supplier', false);
     }
   };
 
@@ -85,10 +91,10 @@ export const SupplierManagement: React.FC = () => {
       try {
         await ApiService.deleteSupplier(id);
         await loadSuppliers();
-        alert('Supplier berhasil dihapus');
+        showToast('Supplier berhasil dihapus');
       } catch (error) {
         console.error('Error deleting supplier:', error);
-        alert('Gagal menghapus supplier');
+        showToast('Gagal menghapus supplier', false);
       }
     }
   };
@@ -107,6 +113,11 @@ export const SupplierManagement: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {toast && (
+        <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg text-white text-sm font-medium ${toast.ok ? 'bg-green-500' : 'bg-red-500'}`}>
+          {toast.msg}
+        </div>
+      )}
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

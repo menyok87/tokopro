@@ -219,6 +219,11 @@ class ApiService {
     return this.request('/expenses/categories/all');
   }
 
+  // Categories
+  static async getCategories() {
+    return this.request('/categories');
+  }
+
   // Health check
   static async healthCheck() {
     return this.request('/health');

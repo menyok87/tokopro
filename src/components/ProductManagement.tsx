@@ -29,6 +29,16 @@ interface Product {
   updated_at: string;
 }
 
+interface Category {
+  id: number;
+  name: string;
+}
+
+interface SupplierOption {
+  id: number;
+  name: string;
+}
+
 export const ProductManagement: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,6 +47,8 @@ export const ProductManagement: React.FC = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [sortBy, setSortBy] = useState('name');
+  const [dbCategories, setDbCategories] = useState<Category[]>([]);
+  const [dbSuppliers, setDbSuppliers] = useState<SupplierOption[]>([]);
   const [toast, setToast] = useState<{msg: string; ok: boolean} | null>(null);
 
   const showToast = (msg: string, ok = true) => {
@@ -66,6 +78,8 @@ export const ProductManagement: React.FC = () => {
 
   useEffect(() => {
     loadProducts();
+    ApiService.getCategories().then(setDbCategories).catch(() => {});
+    ApiService.getSuppliers().then((data) => setDbSuppliers(data)).catch(() => {});
   }, []);
 
   const categories = Array.from(new Set(products.map(p => p.category_name).filter(Boolean)));
@@ -97,14 +111,14 @@ export const ProductManagement: React.FC = () => {
     try {
       await ApiService.createProduct({
         name: productData.name,
-        category_id: 1, // Default category, you might want to implement category selection
+        category_id: productData.category_id || null,
         barcode: productData.barcode,
         description: productData.description,
         cost_price: productData.cost,
         selling_price: productData.price,
         stock_quantity: productData.stock,
         min_stock_level: productData.minStock,
-        supplier_id: 1 // Default supplier, you might want to implement supplier selection
+        supplier_id: productData.supplier_id || null
       });
       await loadProducts();
       setShowAddModal(false);
@@ -119,14 +133,14 @@ export const ProductManagement: React.FC = () => {
     try {
       await ApiService.updateProduct(product.id, {
         name: productData.name,
-        category_id: product.category_id || 1,
+        category_id: productData.category_id || null,
         barcode: productData.barcode,
         description: productData.description,
         cost_price: productData.cost,
         selling_price: productData.price,
         stock_quantity: productData.stock,
         min_stock_level: productData.minStock,
-        supplier_id: product.supplier_id || 1
+        supplier_id: productData.supplier_id || null
       });
       await loadProducts();
       setEditingProduct(null);
@@ -348,8 +362,10 @@ export const ProductManagement: React.FC = () => {
       {(showAddModal || editingProduct) && (
         <ProductModal
           product={editingProduct}
-          onSave={editingProduct ? 
-            (data) => handleUpdateProduct(editingProduct, data) : 
+          categories={dbCategories}
+          suppliers={dbSuppliers}
+          onSave={editingProduct ?
+            (data) => handleUpdateProduct(editingProduct, data) :
             handleAddProduct
           }
           onCancel={() => {
@@ -364,17 +380,19 @@ export const ProductManagement: React.FC = () => {
 
 const ProductModal: React.FC<{
   product?: Product | null;
+  categories: Category[];
+  suppliers: SupplierOption[];
   onSave: (product: any) => void;
   onCancel: () => void;
-}> = ({ product, onSave, onCancel }) => {
+}> = ({ product, categories, suppliers, onSave, onCancel }) => {
   const [formData, setFormData] = useState({
     name: product?.name || '',
-    category: product?.category_name || '',
+    category_id: product?.category_id || (categories[0]?.id || ''),
     price: product?.selling_price || 0,
     cost: product?.cost_price || 0,
     stock: product?.stock_quantity || 0,
     minStock: product?.min_stock_level || 0,
-    supplier: product?.supplier_name || '',
+    supplier_id: product?.supplier_id || '',
     barcode: product?.barcode || '',
     description: product?.description || ''
   });
@@ -418,13 +436,16 @@ const ProductModal: React.FC<{
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Kategori
               </label>
-              <input
-                type="text"
-                value={formData.category}
-                onChange={(e) => setFormData({...formData, category: e.target.value})}
+              <select
+                value={formData.category_id}
+                onChange={(e) => setFormData({...formData, category_id: Number(e.target.value)})}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              />
+              >
+                <option value="">-- Pilih Kategori --</option>
+                {categories.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
             </div>
             
             <div className="grid grid-cols-2 gap-4">
@@ -487,13 +508,16 @@ const ProductModal: React.FC<{
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Supplier
               </label>
-              <input
-                type="text"
-                value={formData.supplier}
-                onChange={(e) => setFormData({...formData, supplier: e.target.value})}
+              <select
+                value={formData.supplier_id}
+                onChange={(e) => setFormData({...formData, supplier_id: Number(e.target.value) || ''})}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              />
+              >
+                <option value="">-- Pilih Supplier --</option>
+                {suppliers.map(s => (
+                  <option key={s.id} value={s.id}>{s.name}</option>
+                ))}
+              </select>
             </div>
             
             <div>

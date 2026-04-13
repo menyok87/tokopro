@@ -60,8 +60,8 @@ export const InventoryManagement: React.FC = () => {
     setTimeout(() => setToast(null), 3000);
   };
 
-  const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(amount);
+  const formatCurrency = (amount: number | string | null | undefined) =>
+    new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(Number(amount) || 0);
 
   const loadProducts = async () => {
     try {

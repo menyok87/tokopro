@@ -49,11 +49,11 @@ export const ExpenseManagement: React.FC = () => {
     setTimeout(() => setToast(null), 3000);
   };
 
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: number | string | null | undefined) => {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
       currency: 'IDR'
-    }).format(amount);
+    }).format(Number(amount) || 0);
   };
 
   const loadExpenses = async () => {

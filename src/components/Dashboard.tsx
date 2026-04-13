@@ -38,11 +38,11 @@ export const Dashboard: React.FC = () => {
   });
   const [loading, setLoading] = useState(true);
 
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: number | string | null | undefined) => {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
       currency: 'IDR'
-    }).format(amount);
+    }).format(Number(amount) || 0);
   };
 
   const loadDashboardData = async () => {

@@ -48,11 +48,11 @@ export const CustomerManagement: React.FC = () => {
     setTimeout(() => setToast(null), 3000);
   };
 
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: number | string | null | undefined) => {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
       currency: 'IDR'
-    }).format(amount);
+    }).format(Number(amount) || 0);
   };
 
   const loadCustomers = async () => {
@@ -115,7 +115,7 @@ export const CustomerManagement: React.FC = () => {
   };
 
   const totalCustomers = customers.length;
-  const totalPurchases = customers.reduce((sum, customer) => sum + customer.total_purchases, 0);
+  const totalPurchases = customers.reduce((sum, customer) => sum + (Number(customer.total_purchases) || 0), 0);
   const avgPurchasePerCustomer = totalCustomers > 0 ? totalPurchases / totalCustomers : 0;
 
   if (loading) {

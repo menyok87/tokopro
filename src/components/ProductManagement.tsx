@@ -64,11 +64,11 @@ export const ProductManagement: React.FC = () => {
     setTimeout(() => setToast(null), 3000);
   };
 
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: number | string | null | undefined) => {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
       currency: 'IDR'
-    }).format(amount);
+    }).format(Number(amount) || 0);
   };
 
   const loadProducts = async () => {
@@ -255,7 +255,7 @@ export const ProductManagement: React.FC = () => {
             <div>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Nilai Inventory</p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {formatCurrency(products.reduce((sum, p) => sum + (p.cost_price * p.stock_quantity), 0))}
+                {formatCurrency(products.reduce((sum, p) => sum + (Number(p.cost_price) * Number(p.stock_quantity)), 0))}
               </p>
             </div>
             <Package className="h-8 w-8 text-purple-600" />

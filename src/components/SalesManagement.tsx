@@ -58,11 +58,11 @@ export const SalesManagement: React.FC = () => {
     setTimeout(() => setToast(null), 3000);
   };
 
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: number | string | null | undefined) => {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
       currency: 'IDR'
-    }).format(amount);
+    }).format(Number(amount) || 0);
   };
 
   const loadSales = async () => {
@@ -113,16 +113,16 @@ export const SalesManagement: React.FC = () => {
     return matchesSearch && matchesDate;
   }).sort((a, b) => new Date(b.sale_date).getTime() - new Date(a.sale_date).getTime());
 
-  const totalSales = filteredSales.reduce((sum, sale) => sum + sale.total_amount, 0);
+  const totalSales = filteredSales.reduce((sum, sale) => sum + (Number(sale.total_amount) || 0), 0);
   const averageTransaction = filteredSales.length > 0 ? totalSales / filteredSales.length : 0;
   const totalItemsSold = filteredSales.reduce((sum, sale) =>
-    sum + (sale.items || []).reduce((s: number, item: any) => s + item.quantity, 0), 0);
+    sum + (sale.items || []).reduce((s: number, item: any) => s + (Number(item.quantity) || 0), 0), 0);
   const avgItemsPerTransaction = filteredSales.length > 0
     ? (totalItemsSold / filteredSales.length).toFixed(1)
     : '0';
   const totalProfit = filteredSales.reduce((sum, sale) => {
     const saleProfit = (sale.items || []).reduce((s, item) => {
-      return s + (item.unit_price - (item.cost_price || 0)) * item.quantity;
+      return s + (Number(item.unit_price) - Number(item.cost_price || 0)) * Number(item.quantity);
     }, 0);
     return sum + saleProfit;
   }, 0);
@@ -389,6 +389,7 @@ const POSModal: React.FC<{
     const existingItem = cart.find(item => item.productId === product.id);
     const currentQty = existingItem?.quantity || 0;
     if (currentQty >= product.stock_quantity) return;
+    const price = Number(product.selling_price) || 0;
     if (existingItem) {
       setCart(cart.map(item =>
         item.productId === product.id
@@ -399,9 +400,9 @@ const POSModal: React.FC<{
       setCart([...cart, {
         productId: product.id,
         productName: product.name,
-        price: product.selling_price,
+        price,
         quantity: 1,
-        total: product.selling_price
+        total: price
       }]);
     }
   };
@@ -421,8 +422,8 @@ const POSModal: React.FC<{
     }
   };
 
-  const subtotal = cart.reduce((sum, item) => sum + item.total, 0);
-  const tax = subtotal * 0.1; // 10% tax
+  const subtotal = cart.reduce((sum, item) => sum + (Number(item.total) || 0), 0);
+  const tax = subtotal * 0.1;
   const total = subtotal + tax;
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -440,11 +441,11 @@ const POSModal: React.FC<{
     });
   };
 
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: number | string | null | undefined) => {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
       currency: 'IDR'
-    }).format(amount);
+    }).format(Number(amount) || 0);
   };
 
   return (

@@ -120,7 +120,7 @@ export const Dashboard: React.FC = () => {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader className="h-8 w-8 animate-spin text-blue-600" />
-        <span className="ml-2 text-gray-600">Memuat data dashboard...</span>
+        <span className="ml-2 text-gray-600 dark:text-gray-400">Memuat data dashboard...</span>
       </div>
     );
   }
@@ -130,8 +130,8 @@ export const Dashboard: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600">Selamat datang kembali! Berikut ringkasan bisnis Anda hari ini.</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+          <p className="text-gray-600 dark:text-gray-400">Selamat datang kembali! Berikut ringkasan bisnis Anda hari ini.</p>
         </div>
         <div className="flex items-center space-x-2 text-sm text-gray-500">
           <Calendar className="h-4 w-4" />
@@ -141,11 +141,11 @@ export const Dashboard: React.FC = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Pendapatan</p>
-              <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.totalRevenue)}</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Pendapatan</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{formatCurrency(stats.totalRevenue)}</p>
             </div>
             <div className="p-3 bg-green-50 rounded-full">
               <TrendingUp className="h-6 w-6 text-green-600" />
@@ -158,11 +158,11 @@ export const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Keuntungan</p>
-              <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalProfit)}</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Keuntungan</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{formatCurrency(totalProfit)}</p>
             </div>
             <div className="p-3 bg-blue-50 rounded-full">
               <DollarSign className="h-6 w-6 text-blue-600" />
@@ -175,11 +175,11 @@ export const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Produk</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.totalProducts}</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Produk</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalProducts}</p>
             </div>
             <div className="p-3 bg-purple-50 rounded-full">
               <Package className="h-6 w-6 text-purple-600" />
@@ -191,11 +191,11 @@ export const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Pelanggan</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.totalCustomers}</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Pelanggan</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalCustomers}</p>
             </div>
             <div className="p-3 bg-orange-50 rounded-full">
               <Users className="h-6 w-6 text-orange-600" />
@@ -211,19 +211,19 @@ export const Dashboard: React.FC = () => {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Penjualan Hari Ini</h3>
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Penjualan Hari Ini</h3>
           <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-gray-600">Jumlah Transaksi</span>
+              <span className="text-gray-600 dark:text-gray-400">Jumlah Transaksi</span>
               <span className="font-semibold">{stats.todaySales.length}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-gray-600">Total Penjualan</span>
+              <span className="text-gray-600 dark:text-gray-400">Total Penjualan</span>
               <span className="font-semibold text-green-600">{formatCurrency(todayRevenue)}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-gray-600">Rata-rata per Transaksi</span>
+              <span className="text-gray-600 dark:text-gray-400">Rata-rata per Transaksi</span>
               <span className="font-semibold">
                 {formatCurrency(stats.todaySales.length > 0 ? todayRevenue / stats.todaySales.length : 0)}
               </span>
@@ -231,17 +231,17 @@ export const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Peringatan Stok</h3>
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Peringatan Stok</h3>
           {stats.lowStockProducts.length > 0 ? (
             <div className="space-y-3">
               {stats.lowStockProducts.slice(0, 3).map((product: any) => (
-                <div key={product.id} className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+                <div key={product.id} className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
                   <div className="flex items-center space-x-3">
                     <AlertTriangle className="h-5 w-5 text-red-500" />
                     <div>
-                      <p className="font-medium text-gray-900">{product.name}</p>
-                      <p className="text-sm text-gray-600">Stok: {product.stock_quantity}</p>
+                      <p className="font-medium text-gray-900 dark:text-white">{product.name}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Stok: {product.stock_quantity}</p>
                     </div>
                   </div>
                   <span className="text-sm font-medium text-red-600">Stok Rendah</span>
@@ -264,8 +264,8 @@ export const Dashboard: React.FC = () => {
 
       {/* Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Produk Terlaris</h3>
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Produk Terlaris</h3>
           <div className="space-y-4">
             {stats.topSellingProducts.map((product: any, index: number) => (
               <div key={product.id} className="flex items-center justify-between">
@@ -274,21 +274,21 @@ export const Dashboard: React.FC = () => {
                     <span className="text-sm font-medium text-blue-600">{index + 1}</span>
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900">{product.name}</p>
-                    <p className="text-sm text-gray-600">{product.category_name}</p>
+                    <p className="font-medium text-gray-900 dark:text-white">{product.name}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{product.category_name}</p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-medium text-gray-900">{product.totalSold} terjual</p>
-                  <p className="text-sm text-gray-600">{formatCurrency(product.selling_price)}</p>
+                  <p className="font-medium text-gray-900 dark:text-white">{product.totalSold} terjual</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{formatCurrency(product.selling_price)}</p>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Transaksi Terakhir</h3>
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Transaksi Terakhir</h3>
           <div className="space-y-4">
             {stats.recentSales.map((sale: any) => (
               <div key={sale.id} className="flex items-center justify-between">
@@ -297,15 +297,15 @@ export const Dashboard: React.FC = () => {
                     <ShoppingCart className="h-4 w-4 text-green-600" />
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900">{sale.customer_name}</p>
-                    <p className="text-sm text-gray-600">
+                    <p className="font-medium text-gray-900 dark:text-white">{sale.customer_name}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
                       {new Date(sale.sale_date).toLocaleDateString('id-ID')}
                     </p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-medium text-gray-900">{formatCurrency(sale.total_amount)}</p>
-                  <p className="text-sm text-gray-600">{sale.payment_method}</p>
+                  <p className="font-medium text-gray-900 dark:text-white">{formatCurrency(sale.total_amount)}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{sale.payment_method}</p>
                 </div>
               </div>
             ))}

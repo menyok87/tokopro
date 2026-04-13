@@ -175,8 +175,8 @@ export const FinancialReports: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Laporan Keuangan</h1>
-          <p className="text-gray-600">Analisis kinerja keuangan dan bisnis</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Laporan Keuangan</h1>
+          <p className="text-gray-600 dark:text-gray-400">Analisis kinerja keuangan dan bisnis</p>
         </div>
         <button
           onClick={loadData}
@@ -188,14 +188,14 @@ export const FinancialReports: React.FC = () => {
       </div>
 
       {/* Report Controls */}
-      <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-100 dark:border-gray-700">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Periode</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Periode</label>
             <select
               value={selectedPeriod}
               onChange={(e) => setSelectedPeriod(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
             >
               <option value="today">Hari Ini</option>
               <option value="week">7 Hari Terakhir</option>
@@ -209,24 +209,24 @@ export const FinancialReports: React.FC = () => {
           {selectedPeriod === 'custom' && (
             <>
               <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Dari Tanggal</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Dari Tanggal</label>
                 <input type="date" value={customStart} onChange={e => setCustomStart(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400" />
               </div>
               <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Sampai Tanggal</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Sampai Tanggal</label>
                 <input type="date" value={customEnd} onChange={e => setCustomEnd(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400" />
               </div>
             </>
           )}
 
           <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Jenis Laporan</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Jenis Laporan</label>
             <select
               value={selectedReport}
               onChange={(e) => setSelectedReport(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
             >
               <option value="overview">Ringkasan Umum</option>
               <option value="profit-loss">Laba Rugi</option>
@@ -239,32 +239,32 @@ export const FinancialReports: React.FC = () => {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-100 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Pendapatan</p>
-              <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalRevenue)}</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Pendapatan</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{formatCurrency(totalRevenue)}</p>
             </div>
             <DollarSign className="h-8 w-8 text-green-600" />
           </div>
           <div className="mt-4 text-sm text-gray-500">{sales.length} transaksi</div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-100 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Beban Operasional</p>
-              <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalExpenses)}</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Beban Operasional</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{formatCurrency(totalExpenses)}</p>
             </div>
             <Activity className="h-8 w-8 text-red-600" />
           </div>
           <div className="mt-4 text-sm text-gray-500">{expenses.length} pengeluaran</div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-100 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Laba Kotor</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Laba Kotor</p>
               <p className={`text-2xl font-bold ${grossProfit >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
                 {formatCurrency(grossProfit)}
               </p>
@@ -276,10 +276,10 @@ export const FinancialReports: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-100 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Laba Bersih</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Laba Bersih</p>
               <p className={`text-2xl font-bold ${netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {formatCurrency(netProfit)}
               </p>
@@ -295,8 +295,8 @@ export const FinancialReports: React.FC = () => {
       {/* ── Overview ─────────────────────────────────── */}
       {selectedReport === 'overview' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Penjualan per Kategori</h3>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-100 dark:border-gray-700">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Penjualan per Kategori</h3>
             {Object.keys(salesByCategory).length === 0 ? (
               <p className="text-gray-500 text-sm">Tidak ada data penjualan</p>
             ) : (
@@ -310,7 +310,7 @@ export const FinancialReports: React.FC = () => {
                         <span className="text-sm font-medium text-gray-700">{cat}</span>
                       </div>
                       <div className="text-right">
-                        <div className="text-sm font-medium text-gray-900">{formatCurrency(amount)}</div>
+                        <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{formatCurrency(amount)}</div>
                         <div className="text-xs text-gray-500">
                           {totalRevenue > 0 ? ((amount / totalRevenue) * 100).toFixed(1) : 0}%
                         </div>
@@ -321,8 +321,8 @@ export const FinancialReports: React.FC = () => {
             )}
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Pengeluaran per Kategori</h3>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-100 dark:border-gray-700">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Pengeluaran per Kategori</h3>
             {Object.keys(expensesByCategory).length === 0 ? (
               <p className="text-gray-500 text-sm">Tidak ada data pengeluaran</p>
             ) : (
@@ -336,7 +336,7 @@ export const FinancialReports: React.FC = () => {
                         <span className="text-sm font-medium text-gray-700">{cat}</span>
                       </div>
                       <div className="text-right">
-                        <div className="text-sm font-medium text-gray-900">{formatCurrency(amount)}</div>
+                        <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{formatCurrency(amount)}</div>
                         <div className="text-xs text-gray-500">
                           {totalExpenses > 0 ? ((amount / totalExpenses) * 100).toFixed(1) : 0}%
                         </div>
@@ -351,7 +351,7 @@ export const FinancialReports: React.FC = () => {
 
       {/* ── Laba Rugi ─────────────────────────────────── */}
       {selectedReport === 'profit-loss' && (
-        <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-100 dark:border-gray-700">
           <h3 className="text-lg font-semibold text-gray-900 mb-6">Laporan Laba Rugi</h3>
           <div className="space-y-2 max-w-2xl">
             <Row label="PENDAPATAN" value={totalRevenue} bold />
@@ -378,25 +378,25 @@ export const FinancialReports: React.FC = () => {
 
       {/* ── Kinerja Produk ─────────────────────────────── */}
       {selectedReport === 'products' && (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
           <div className="p-6">
             <h3 className="text-lg font-semibold text-gray-900">Kinerja Produk</h3>
             <p className="text-sm text-gray-500 mt-1">{productPerformance.length} produk terjual dalam periode ini</p>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50">
+              <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
                   {['Produk', 'Kategori', 'Terjual', 'Pendapatan', 'HPP', 'Laba', 'Margin'].map(h => (
-                    <th key={h} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{h}</th>
+                    <th key={h} className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{h}</th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                 {productPerformance.length === 0 ? (
                   <tr><td colSpan={7} className="px-6 py-8 text-center text-gray-500">Tidak ada data penjualan produk</td></tr>
                 ) : productPerformance.map((p, i) => (
-                  <tr key={i} className="hover:bg-gray-50">
+                  <tr key={i} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{p.name}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{p.category}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{p.qty} pcs</td>
@@ -418,8 +418,8 @@ export const FinancialReports: React.FC = () => {
 
       {/* ── Tren Bulanan ─────────────────────────────── */}
       {selectedReport === 'trends' && (
-        <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Tren Bulanan (12 Bulan Terakhir)</h3>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-100 dark:border-gray-700">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Tren Bulanan (12 Bulan Terakhir)</h3>
           <div className="space-y-3">
             {monthlyTrend.map((m, i) => (
               <div key={i} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">

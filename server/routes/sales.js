@@ -7,7 +7,7 @@ const router = express.Router();
 router.get('/', async (req, res) => {
   try {
     const { limit = 100, offset = 0 } = req.query;
-    const sales = await Sale.getAll(parseInt(limit), parseInt(offset));
+    const sales = await Sale.getAll(parseInt(limit), parseInt(offset), req.user.id, req.user.role);
     res.json(sales);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -52,7 +52,7 @@ router.get('/:id', async (req, res) => {
 // Create new sale
 router.post('/', async (req, res) => {
   try {
-    const saleId = await Sale.create(req.body);
+    const saleId = await Sale.create({ ...req.body, user_id: req.user.id });
     const sale = await Sale.getById(saleId);
     res.status(201).json(sale);
   } catch (error) {

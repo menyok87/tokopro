@@ -6,7 +6,7 @@ const router = express.Router();
 // Get all expenses
 router.get('/', async (req, res) => {
   try {
-    const expenses = await Expense.getAll();
+    const expenses = await Expense.getAll(req.user.id, req.user.role);
     res.json(expenses);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -61,7 +61,7 @@ router.get('/:id', async (req, res) => {
 // Create new expense
 router.post('/', async (req, res) => {
   try {
-    const expenseId = await Expense.create(req.body);
+    const expenseId = await Expense.create({ ...req.body, user_id: req.user.id });
     const expense = await Expense.getById(expenseId);
     res.status(201).json(expense);
   } catch (error) {

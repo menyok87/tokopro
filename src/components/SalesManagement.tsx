@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import ApiService from '../services/api';
-import { 
-  Plus, 
-  Search, 
-  ShoppingCart, 
-  Calendar, 
-  CreditCard, 
+import {
+  Plus,
+  Search,
+  ShoppingCart,
+  TrendingUp,
+  CreditCard,
   Receipt,
   X,
   Minus,
-  Loader
+  Loader,
+  BarChart3
 } from 'lucide-react';
 
 interface Sale {
@@ -114,6 +115,11 @@ export const SalesManagement: React.FC = () => {
 
   const totalSales = filteredSales.reduce((sum, sale) => sum + sale.total_amount, 0);
   const averageTransaction = filteredSales.length > 0 ? totalSales / filteredSales.length : 0;
+  const totalItemsSold = filteredSales.reduce((sum, sale) =>
+    sum + (sale.items || []).reduce((s: number, item: any) => s + item.quantity, 0), 0);
+  const avgItemsPerTransaction = filteredSales.length > 0
+    ? (totalItemsSold / filteredSales.length).toFixed(1)
+    : '0';
   const totalProfit = filteredSales.reduce((sum, sale) => {
     const saleProfit = (sale.items || []).reduce((s, item) => {
       return s + (item.unit_price - (item.cost_price || 0)) * item.quantity;
@@ -209,16 +215,25 @@ export const SalesManagement: React.FC = () => {
             </div>
             <CreditCard className="h-8 w-8 text-purple-600" />
           </div>
+          <div className="mt-2 flex items-center text-sm">
+            <BarChart3 className="h-3.5 w-3.5 text-gray-400 mr-1" />
+            <span className="text-gray-500 dark:text-gray-400">
+              {avgItemsPerTransaction} item/transaksi · {filteredSales.length} transaksi
+            </span>
+          </div>
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border border-gray-100 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Keuntungan</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Keuntungan Kotor</p>
+              <p className={`text-2xl font-bold ${totalProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {formatCurrency(totalProfit)}
               </p>
             </div>
-            <Calendar className="h-8 w-8 text-orange-600" />
+            <TrendingUp className="h-8 w-8 text-green-600" />
+          </div>
+          <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+            {totalItemsSold} total item terjual
           </div>
         </div>
       </div>

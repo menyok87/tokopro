@@ -1,14 +1,19 @@
 import { pool } from '../database/connection.js';
 
 class Sale {
-  static async getAll(limit = 100, offset = 0) {
+  static async getAll(limit = 100, offset = 0, userId = null, role = null) {
+    const isAdmin = role === 'admin';
+    const params = isAdmin ? [limit, offset] : [limit, offset, userId];
+    const userFilter = isAdmin ? '' : 'AND s.user_id = $3';
+
     const { rows } = await pool.query(`
       SELECT s.*, c.name as customer_name_db
       FROM sales s
       LEFT JOIN customers c ON s.customer_id = c.id
+      WHERE 1=1 ${userFilter}
       ORDER BY s.sale_date DESC
       LIMIT $1 OFFSET $2
-    `, [limit, offset]);
+    `, params);
 
     for (let sale of rows) {
       const { rows: items } = await pool.query(`

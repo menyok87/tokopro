@@ -1,13 +1,18 @@
 import { pool } from '../database/connection.js';
 
 class Expense {
-  static async getAll() {
+  static async getAll(userId = null, role = null) {
+    const isAdmin = role === 'admin';
+    const params = isAdmin ? [] : [userId];
+    const userFilter = isAdmin ? '' : 'WHERE e.user_id = $1';
+
     const { rows } = await pool.query(`
       SELECT e.*, ec.name as category_name
       FROM expenses e
       LEFT JOIN expense_categories ec ON e.category_id = ec.id
+      ${userFilter}
       ORDER BY e.expense_date DESC
-    `);
+    `, params);
     return rows;
   }
 

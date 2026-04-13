@@ -224,6 +224,18 @@ class ApiService {
     return this.request('/categories');
   }
 
+  static async createCategory(data) {
+    return this.request('/categories', { method: 'POST', body: data });
+  }
+
+  static async updateCategory(id, data) {
+    return this.request(`/categories/${id}`, { method: 'PUT', body: data });
+  }
+
+  static async deleteCategory(id) {
+    return this.request(`/categories/${id}`, { method: 'DELETE' });
+  }
+
   // Health check
   static async healthCheck() {
     return this.request('/health');

@@ -1,10 +1,11 @@
 import express from 'express';
 import Supplier from '../models/Supplier.js';
+import { requireRole } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Get all suppliers
-router.get('/', async (req, res) => {
+// Get all suppliers (admin & manager only)
+router.get('/', requireRole(['admin', 'manager']), async (req, res) => {
   try {
     const suppliers = await Supplier.getAll();
     res.json(suppliers);
@@ -13,8 +14,8 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Get supplier by ID
-router.get('/:id', async (req, res) => {
+// Get supplier by ID (admin & manager only)
+router.get('/:id', requireRole(['admin', 'manager']), async (req, res) => {
   try {
     const supplier = await Supplier.getById(req.params.id);
     if (!supplier) {
@@ -26,8 +27,8 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Create new supplier
-router.post('/', async (req, res) => {
+// Create new supplier (admin & manager only)
+router.post('/', requireRole(['admin', 'manager']), async (req, res) => {
   try {
     const supplierId = await Supplier.create(req.body);
     const supplier = await Supplier.getById(supplierId);
@@ -37,8 +38,8 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Update supplier
-router.put('/:id', async (req, res) => {
+// Update supplier (admin & manager only)
+router.put('/:id', requireRole(['admin', 'manager']), async (req, res) => {
   try {
     await Supplier.update(req.params.id, req.body);
     const supplier = await Supplier.getById(req.params.id);
@@ -48,8 +49,8 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// Delete supplier
-router.delete('/:id', async (req, res) => {
+// Delete supplier (admin only)
+router.delete('/:id', requireRole(['admin']), async (req, res) => {
   try {
     await Supplier.delete(req.params.id);
     res.json({ message: 'Supplier deleted successfully' });
@@ -58,8 +59,8 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-// Get supplier products
-router.get('/:id/products', async (req, res) => {
+// Get supplier products (admin & manager only)
+router.get('/:id/products', requireRole(['admin', 'manager']), async (req, res) => {
   try {
     const products = await Supplier.getSupplierProducts(req.params.id);
     res.json(products);

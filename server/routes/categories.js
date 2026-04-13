@@ -1,5 +1,6 @@
 import express from 'express';
 import { pool } from '../database/connection.js';
+import { requireRole } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -13,8 +14,8 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Create category
-router.post('/', async (req, res) => {
+// Create category (admin only)
+router.post('/', requireRole(['admin']), async (req, res) => {
   try {
     const { name, description } = req.body;
     if (!name) return res.status(400).json({ error: 'Nama kategori wajib diisi' });
@@ -28,8 +29,8 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Update category
-router.put('/:id', async (req, res) => {
+// Update category (admin only)
+router.put('/:id', requireRole(['admin']), async (req, res) => {
   try {
     const { name, description } = req.body;
     if (!name) return res.status(400).json({ error: 'Nama kategori wajib diisi' });
@@ -44,8 +45,8 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// Delete category
-router.delete('/:id', async (req, res) => {
+// Delete category (admin only)
+router.delete('/:id', requireRole(['admin']), async (req, res) => {
   try {
     const { rowCount } = await pool.query('DELETE FROM categories WHERE id = $1', [req.params.id]);
     if (rowCount === 0) return res.status(404).json({ error: 'Kategori tidak ditemukan' });

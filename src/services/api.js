@@ -236,6 +236,23 @@ class ApiService {
     return this.request(`/categories/${id}`, { method: 'DELETE' });
   }
 
+  // Users (admin only)
+  static async getUsers() {
+    return this.request('/users');
+  }
+
+  static async createUser(userData) {
+    return this.request('/users', { method: 'POST', body: userData });
+  }
+
+  static async updateUser(id, userData) {
+    return this.request(`/users/${id}`, { method: 'PUT', body: userData });
+  }
+
+  static async deleteUser(id) {
+    return this.request(`/users/${id}`, { method: 'DELETE' });
+  }
+
   // Health check
   static async healthCheck() {
     return this.request('/health');

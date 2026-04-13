@@ -16,6 +16,7 @@ import customerRoutes from './routes/customers.js';
 import supplierRoutes from './routes/suppliers.js';
 import expenseRoutes from './routes/expenses.js';
 import categoryRoutes from './routes/categories.js';
+import userRoutes from './routes/users.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -57,6 +58,7 @@ app.use('/api/customers', authenticateToken, customerRoutes);
 app.use('/api/suppliers', authenticateToken, supplierRoutes);
 app.use('/api/expenses', authenticateToken, expenseRoutes);
 app.use('/api/categories', authenticateToken, categoryRoutes);
+app.use('/api/users', authenticateToken, userRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

@@ -11,6 +11,7 @@ import { SupplierManagement } from './components/SupplierManagement';
 import { InventoryManagement } from './components/InventoryManagement';
 import { ExpenseManagement } from './components/ExpenseManagement';
 import { FinancialReports } from './components/FinancialReports';
+import { UserManagement } from './components/UserManagement';
 import { AppProvider } from './context/AppContext';
 
 const AppContent: React.FC = () => {
@@ -52,6 +53,8 @@ const AppContent: React.FC = () => {
         return <ExpenseManagement />;
       case 'reports':
         return <FinancialReports />;
+      case 'users':
+        return <UserManagement />;
       default:
         return <Dashboard />;
     }

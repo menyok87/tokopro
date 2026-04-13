@@ -1,5 +1,6 @@
 import express from 'express';
 import Customer from '../models/Customer.js';
+import { requireRole } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -47,8 +48,8 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Update customer
-router.put('/:id', async (req, res) => {
+// Update customer (admin & manager only)
+router.put('/:id', requireRole(['admin', 'manager']), async (req, res) => {
   try {
     await Customer.update(req.params.id, req.body);
     const customer = await Customer.getById(req.params.id);
@@ -58,8 +59,8 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// Delete customer
-router.delete('/:id', async (req, res) => {
+// Delete customer (admin only)
+router.delete('/:id', requireRole(['admin']), async (req, res) => {
   try {
     await Customer.delete(req.params.id);
     res.json({ message: 'Customer deleted successfully' });

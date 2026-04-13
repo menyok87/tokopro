@@ -15,10 +15,11 @@ const generateToken = (userId, username, role) => {
   );
 };
 
-// Register new user
+// Register new user (public = always cashier; admin can set role via user management)
 router.post('/register', async (req, res) => {
   try {
-    const { username, email, password, role = 'cashier' } = req.body;
+    const { username, email, password } = req.body;
+    const role = 'cashier'; // Public registration always creates cashier
 
     if (!username || !email || !password) {
       return res.status(400).json({ error: 'Username, email, and password are required' });

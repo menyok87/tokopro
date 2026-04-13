@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ApiService from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import {
   Plus,
   Search,
@@ -40,6 +41,12 @@ interface SupplierOption {
 }
 
 export const ProductManagement: React.FC = () => {
+  const { state } = useAuth();
+  const role = state.user?.role ?? 'cashier';
+  const canCreate = role === 'admin' || role === 'manager';
+  const canEdit = role === 'admin' || role === 'manager';
+  const canDelete = role === 'admin';
+
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -203,13 +210,15 @@ export const ProductManagement: React.FC = () => {
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Manajemen Produk</h1>
           <p className="text-gray-600 dark:text-gray-400">Kelola produk dan inventory toko Anda</p>
         </div>
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
-        >
-          <Plus className="h-5 w-5" />
-          <span>Tambah Produk</span>
-        </button>
+        {canCreate && (
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+          >
+            <Plus className="h-5 w-5" />
+            <span>Tambah Produk</span>
+          </button>
+        )}
       </div>
 
       {/* Stats */}
@@ -352,18 +361,25 @@ export const ProductManagement: React.FC = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">
-                      <button
-                        onClick={() => setEditingProduct(product)}
-                        className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => setConfirmDeleteId(product.id)}
-                        className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                      {canEdit && (
+                        <button
+                          onClick={() => setEditingProduct(product)}
+                          className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </button>
+                      )}
+                      {canDelete && (
+                        <button
+                          onClick={() => setConfirmDeleteId(product.id)}
+                          className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
+                      {!canEdit && !canDelete && (
+                        <span className="text-gray-400 text-xs italic">Hanya lihat</span>
+                      )}
                     </div>
                   </td>
                 </tr>

@@ -1,5 +1,6 @@
 import express from 'express';
 import Product from '../models/Product.js';
+import { requireRole } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -36,8 +37,8 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Create new product
-router.post('/', async (req, res) => {
+// Create new product (admin & manager only)
+router.post('/', requireRole(['admin', 'manager']), async (req, res) => {
   try {
     const productId = await Product.create(req.body);
     const product = await Product.getById(productId);
@@ -47,8 +48,8 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Update product
-router.put('/:id', async (req, res) => {
+// Update product (admin & manager only)
+router.put('/:id', requireRole(['admin', 'manager']), async (req, res) => {
   try {
     await Product.update(req.params.id, req.body);
     const product = await Product.getById(req.params.id);
@@ -58,8 +59,8 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// Delete product
-router.delete('/:id', async (req, res) => {
+// Delete product (admin only)
+router.delete('/:id', requireRole(['admin']), async (req, res) => {
   try {
     await Product.delete(req.params.id);
     res.json({ message: 'Product deleted successfully' });
@@ -68,8 +69,8 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-// Update product stock
-router.patch('/:id/stock', async (req, res) => {
+// Update product stock (admin & manager only)
+router.patch('/:id/stock', requireRole(['admin', 'manager']), async (req, res) => {
   try {
     const { stock_quantity, movement_type, reference_type, user_id } = req.body;
     await Product.updateStock(req.params.id, stock_quantity, movement_type, reference_type, user_id);

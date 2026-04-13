@@ -31,6 +31,7 @@ interface SaleItem {
   quantity: number;
   unit_price: number;
   total_price: number;
+  cost_price?: number;
 }
 
 interface Product {
@@ -113,6 +114,12 @@ export const SalesManagement: React.FC = () => {
 
   const totalSales = filteredSales.reduce((sum, sale) => sum + sale.total_amount, 0);
   const averageTransaction = filteredSales.length > 0 ? totalSales / filteredSales.length : 0;
+  const totalProfit = filteredSales.reduce((sum, sale) => {
+    const saleProfit = (sale.items || []).reduce((s, item) => {
+      return s + (item.unit_price - (item.cost_price || 0)) * item.quantity;
+    }, 0);
+    return sum + saleProfit;
+  }, 0);
 
   const handleCreateSale = async (saleData: any) => {
     try {
@@ -208,7 +215,7 @@ export const SalesManagement: React.FC = () => {
             <div>
               <p className="text-sm font-medium text-gray-600">Keuntungan</p>
               <p className="text-2xl font-bold text-gray-900">
-                {formatCurrency(totalSales * 0.2)} {/* Estimasi 20% margin */}
+                {formatCurrency(totalProfit)}
               </p>
             </div>
             <Calendar className="h-8 w-8 text-orange-600" />

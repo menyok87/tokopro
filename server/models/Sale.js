@@ -12,7 +12,7 @@ class Sale {
 
     for (let sale of rows) {
       const { rows: items } = await pool.query(`
-        SELECT si.*, p.name as product_name
+        SELECT si.*, p.name as product_name, p.cost_price
         FROM sale_items si
         LEFT JOIN products p ON si.product_id = p.id
         WHERE si.sale_id = $1
@@ -35,7 +35,7 @@ class Sale {
 
     const sale = rows[0];
     const { rows: items } = await pool.query(`
-      SELECT si.*, p.name as product_name
+      SELECT si.*, p.name as product_name, p.cost_price
       FROM sale_items si
       LEFT JOIN products p ON si.product_id = p.id
       WHERE si.sale_id = $1

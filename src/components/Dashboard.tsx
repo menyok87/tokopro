@@ -15,6 +15,7 @@ import {
 interface DashboardStats {
   totalRevenue: number;
   totalExpenses: number;
+  totalGrossProfit: number;
   totalProducts: number;
   totalCustomers: number;
   lowStockProducts: any[];
@@ -27,6 +28,7 @@ export const Dashboard: React.FC = () => {
   const [stats, setStats] = useState<DashboardStats>({
     totalRevenue: 0,
     totalExpenses: 0,
+    totalGrossProfit: 0,
     totalProducts: 0,
     totalCustomers: 0,
     lowStockProducts: [],
@@ -58,6 +60,12 @@ export const Dashboard: React.FC = () => {
       // Calculate stats
       const totalRevenue = sales.reduce((sum: number, sale: any) => sum + sale.total_amount, 0);
       const totalExpenses = expenses.reduce((sum: number, expense: any) => sum + expense.amount, 0);
+      const totalGrossProfit = sales.reduce((sum: number, sale: any) => {
+        const saleProfit = (sale.items || []).reduce((s: number, item: any) => {
+          return s + (item.unit_price - (item.cost_price || 0)) * item.quantity;
+        }, 0);
+        return sum + saleProfit;
+      }, 0);
       
       // Today's sales
       const today = new Date();
@@ -86,6 +94,7 @@ export const Dashboard: React.FC = () => {
       setStats({
         totalRevenue,
         totalExpenses,
+        totalGrossProfit,
         totalProducts: products.length,
         totalCustomers: customers.length,
         lowStockProducts,
@@ -104,7 +113,7 @@ export const Dashboard: React.FC = () => {
     loadDashboardData();
   }, []);
 
-  const totalProfit = stats.totalRevenue - stats.totalExpenses;
+  const totalProfit = stats.totalGrossProfit;
   const todayRevenue = stats.todaySales.reduce((sum: number, sale: any) => sum + sale.total_amount, 0);
 
   if (loading) {

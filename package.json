@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "server": "node server/app.js",
-    "setup-db": "node -e \"require('./server/utils/dbSetup').setupDatabase().catch(console.error)\"",
+    "create-admin": "node server/scripts/createAdmin.js",
     "migrate": "node -e \"require('./server/database/migrationRunner'); new (require('./server/database/migrationRunner'))().runMigrations().catch(console.error)\"",
     "migrate:status": "node -e \"require('./server/database/migrationRunner'); new (require('./server/database/migrationRunner'))().getStatus().catch(console.error)\"",
     "migrate:rollback": "node -e \"require('./server/database/migrationRunner'); new (require('./server/database/migrationRunner'))().rollbackLastMigration().catch(console.error)\"",

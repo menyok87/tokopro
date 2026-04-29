@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import ApiService from '../services/api';
-import { 
-  Plus, 
-  Search, 
-  Edit, 
-  Trash2, 
-  CreditCard, 
-  Calendar, 
+import {
+  Plus,
+  Search,
+  Edit,
+  Trash2,
+  CreditCard,
+  Calendar,
   TrendingUp,
   DollarSign,
   Receipt,
   X,
-  Loader
+  Loader,
+  AlertTriangle
 } from 'lucide-react';
 
 interface Expense {
@@ -39,13 +40,20 @@ export const ExpenseManagement: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
   const [selectedDateRange, setSelectedDateRange] = useState('month');
+  const [toast, setToast] = useState<{msg: string; ok: boolean} | null>(null);
 
-  const formatCurrency = (amount: number) => {
+  const showToast = (msg: string, ok = true) => {
+    setToast({ msg, ok });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  const formatCurrency = (amount: number | string | null | undefined) => {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
       currency: 'IDR'
-    }).format(amount);
+    }).format(Number(amount) || 0);
   };
 
   const loadExpenses = async () => {
@@ -55,7 +63,7 @@ export const ExpenseManagement: React.FC = () => {
       setExpenses(data);
     } catch (error) {
       console.error('Error loading expenses:', error);
-      alert('Gagal memuat data pengeluaran');
+      showToast('Gagal memuat data pengeluaran', false);
     } finally {
       setLoading(false);
     }
@@ -114,10 +122,10 @@ export const ExpenseManagement: React.FC = () => {
       });
       await loadExpenses();
       setShowAddModal(false);
-      alert('Pengeluaran berhasil ditambahkan');
+      showToast('Pengeluaran berhasil ditambahkan');
     } catch (error) {
       console.error('Error adding expense:', error);
-      alert('Gagal menambahkan pengeluaran');
+      showToast('Gagal menambahkan pengeluaran', false);
     }
   };
 
@@ -132,23 +140,22 @@ export const ExpenseManagement: React.FC = () => {
       });
       await loadExpenses();
       setEditingExpense(null);
-      alert('Pengeluaran berhasil diperbarui');
+      showToast('Pengeluaran berhasil diperbarui');
     } catch (error) {
       console.error('Error updating expense:', error);
-      alert('Gagal memperbarui pengeluaran');
+      showToast('Gagal memperbarui pengeluaran', false);
     }
   };
 
   const handleDeleteExpense = async (id: number) => {
-    if (window.confirm('Apakah Anda yakin ingin menghapus pengeluaran ini?')) {
-      try {
-        await ApiService.deleteExpense(id);
-        await loadExpenses();
-        alert('Pengeluaran berhasil dihapus');
-      } catch (error) {
-        console.error('Error deleting expense:', error);
-        alert('Gagal menghapus pengeluaran');
-      }
+    try {
+      await ApiService.deleteExpense(id);
+      await loadExpenses();
+      setConfirmDeleteId(null);
+      showToast('Pengeluaran berhasil dihapus');
+    } catch (error) {
+      console.error('Error deleting expense:', error);
+      showToast('Gagal menghapus pengeluaran', false);
     }
   };
 
@@ -163,11 +170,31 @@ export const ExpenseManagement: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {toast && (
+        <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg text-white text-sm font-medium ${toast.ok ? 'bg-green-500' : 'bg-red-500'}`}>
+          {toast.msg}
+        </div>
+      )}
+      {confirmDeleteId !== null && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-sm w-full p-6 shadow-xl">
+            <div className="flex items-center mb-4">
+              <AlertTriangle className="h-6 w-6 text-red-500 mr-3" />
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Konfirmasi Hapus</h3>
+            </div>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">Apakah Anda yakin ingin menghapus pengeluaran ini?</p>
+            <div className="flex space-x-3">
+              <button onClick={() => handleDeleteExpense(confirmDeleteId)} className="flex-1 bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors">Ya, Hapus</button>
+              <button onClick={() => setConfirmDeleteId(null)} className="flex-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 py-2 px-4 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Batal</button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Manajemen Pengeluaran</h1>
-          <p className="text-gray-600">Kelola dan pantau pengeluaran operasional toko</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Manajemen Pengeluaran</h1>
+          <p className="text-gray-600 dark:text-gray-400">Kelola dan pantau pengeluaran operasional toko</p>
         </div>
         <button
           onClick={() => setShowAddModal(true)}
@@ -180,11 +207,11 @@ export const ExpenseManagement: React.FC = () => {
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-100 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Pengeluaran</p>
-              <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalExpenses)}</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Pengeluaran</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{formatCurrency(totalExpenses)}</p>
             </div>
             <CreditCard className="h-8 w-8 text-red-600" />
           </div>
@@ -195,11 +222,11 @@ export const ExpenseManagement: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-100 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Jumlah Transaksi</p>
-              <p className="text-2xl font-bold text-gray-900">{filteredExpenses.length}</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Jumlah Transaksi</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{filteredExpenses.length}</p>
             </div>
             <Receipt className="h-8 w-8 text-blue-600" />
           </div>
@@ -208,11 +235,11 @@ export const ExpenseManagement: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-100 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Rata-rata Harian</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Rata-rata Harian</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
                 {formatCurrency(filteredExpenses.length > 0 ? totalExpenses / 30 : 0)}
               </p>
             </div>
@@ -223,11 +250,11 @@ export const ExpenseManagement: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-100 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Kategori Terbesar</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Kategori Terbesar</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
                 {expensesByCategory.length > 0 ? 
                   formatCurrency(Math.max(...expensesByCategory.map(c => c.amount))) : 
                   formatCurrency(0)
@@ -248,8 +275,8 @@ export const ExpenseManagement: React.FC = () => {
       </div>
 
       {/* Category Breakdown */}
-      <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Pengeluaran per Kategori</h3>
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-100 dark:border-gray-700">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Pengeluaran per Kategori</h3>
         <div className="space-y-3">
           {expensesByCategory.map(({ category, amount }) => (
             <div key={category} className="flex items-center justify-between">
@@ -258,7 +285,7 @@ export const ExpenseManagement: React.FC = () => {
                 <span className="text-sm font-medium text-gray-700">{category}</span>
               </div>
               <div className="text-right">
-                <div className="text-sm font-medium text-gray-900">{formatCurrency(amount)}</div>
+                <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{formatCurrency(amount)}</div>
                 <div className="text-xs text-gray-500">
                   {totalExpenses > 0 ? ((amount / totalExpenses) * 100).toFixed(1) : 0}%
                 </div>
@@ -269,7 +296,7 @@ export const ExpenseManagement: React.FC = () => {
       </div>
 
       {/* Search and Filters */}
-      <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-100 dark:border-gray-700">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -278,13 +305,13 @@ export const ExpenseManagement: React.FC = () => {
               placeholder="Cari pengeluaran berdasarkan deskripsi atau kategori..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
             />
           </div>
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
           >
             <option value="">Semua Kategori</option>
             {categories.map(category => (
@@ -294,7 +321,7 @@ export const ExpenseManagement: React.FC = () => {
           <select
             value={selectedDateRange}
             onChange={(e) => setSelectedDateRange(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
           >
             <option value="all">Semua Waktu</option>
             <option value="today">Hari Ini</option>
@@ -305,33 +332,33 @@ export const ExpenseManagement: React.FC = () => {
       </div>
 
       {/* Expenses Table */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50">
+            <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Deskripsi
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Kategori
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Jumlah
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Tanggal
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Aksi
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
               {filteredExpenses.map((expense) => (
-                <tr key={expense.id} className="hover:bg-gray-50">
+                <tr key={expense.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{expense.description}</div>
+                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{expense.description}</div>
                     {expense.receipt_number && (
                       <div className="text-sm text-gray-500 flex items-center mt-1">
                         <Receipt className="h-3 w-3 mr-1" />
@@ -362,7 +389,7 @@ export const ExpenseManagement: React.FC = () => {
                         <Edit className="h-4 w-4" />
                       </button>
                       <button
-                        onClick={() => handleDeleteExpense(expense.id)}
+                        onClick={() => setConfirmDeleteId(expense.id)}
                         className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -416,10 +443,10 @@ const ExpenseModal: React.FC<{
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg max-w-md w-full">
+      <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full">
         <div className="p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-gray-900">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">
               {expense ? 'Edit Pengeluaran' : 'Tambah Pengeluaran'}
             </h2>
             <button
@@ -432,39 +459,39 @@ const ExpenseModal: React.FC<{
           
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Deskripsi
               </label>
               <input
                 type="text"
                 value={formData.description}
                 onChange={(e) => setFormData({...formData, description: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                 required
               />
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Jumlah
               </label>
               <input
                 type="number"
                 value={formData.amount}
                 onChange={(e) => setFormData({...formData, amount: Number(e.target.value)})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                 required
               />
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Kategori
               </label>
               <select
                 value={formData.category_id}
                 onChange={(e) => setFormData({...formData, category_id: Number(e.target.value)})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                 required
               >
                 {categories.map(category => (
@@ -474,27 +501,27 @@ const ExpenseModal: React.FC<{
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Tanggal
               </label>
               <input
                 type="date"
                 value={formData.date}
                 onChange={(e) => setFormData({...formData, date: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                 required
               />
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Bukti/Keterangan
               </label>
               <input
                 type="text"
                 value={formData.receipt}
                 onChange={(e) => setFormData({...formData, receipt: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                 placeholder="Nomor invoice, keterangan tambahan, dll"
               />
             </div>

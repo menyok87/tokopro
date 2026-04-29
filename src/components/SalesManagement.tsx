@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import ApiService from '../services/api';
-import { 
-  Plus, 
-  Search, 
-  ShoppingCart, 
-  Calendar, 
-  CreditCard, 
+import {
+  Plus,
+  Search,
+  ShoppingCart,
+  TrendingUp,
+  CreditCard,
   Receipt,
   X,
   Minus,
-  Loader
+  Loader,
+  BarChart3
 } from 'lucide-react';
 
 interface Sale {
@@ -31,6 +32,7 @@ interface SaleItem {
   quantity: number;
   unit_price: number;
   total_price: number;
+  cost_price?: number;
 }
 
 interface Product {
@@ -49,12 +51,18 @@ export const SalesManagement: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showPOSModal, setShowPOSModal] = useState(false);
   const [selectedDateRange, setSelectedDateRange] = useState('today');
+  const [toast, setToast] = useState<{msg: string; ok: boolean} | null>(null);
 
-  const formatCurrency = (amount: number) => {
+  const showToast = (msg: string, ok = true) => {
+    setToast({ msg, ok });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  const formatCurrency = (amount: number | string | null | undefined) => {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
       currency: 'IDR'
-    }).format(amount);
+    }).format(Number(amount) || 0);
   };
 
   const loadSales = async () => {
@@ -64,7 +72,7 @@ export const SalesManagement: React.FC = () => {
       setSales(data);
     } catch (error) {
       console.error('Error loading sales:', error);
-      alert('Gagal memuat data penjualan');
+      showToast('Gagal memuat data penjualan', false);
     } finally {
       setLoading(false);
     }
@@ -105,8 +113,19 @@ export const SalesManagement: React.FC = () => {
     return matchesSearch && matchesDate;
   }).sort((a, b) => new Date(b.sale_date).getTime() - new Date(a.sale_date).getTime());
 
-  const totalSales = filteredSales.reduce((sum, sale) => sum + sale.total_amount, 0);
+  const totalSales = filteredSales.reduce((sum, sale) => sum + (Number(sale.total_amount) || 0), 0);
   const averageTransaction = filteredSales.length > 0 ? totalSales / filteredSales.length : 0;
+  const totalItemsSold = filteredSales.reduce((sum, sale) =>
+    sum + (sale.items || []).reduce((s: number, item: any) => s + (Number(item.quantity) || 0), 0), 0);
+  const avgItemsPerTransaction = filteredSales.length > 0
+    ? (totalItemsSold / filteredSales.length).toFixed(1)
+    : '0';
+  const totalProfit = filteredSales.reduce((sum, sale) => {
+    const saleProfit = (sale.items || []).reduce((s, item) => {
+      return s + (Number(item.unit_price) - Number(item.cost_price || 0)) * Number(item.quantity);
+    }, 0);
+    return sum + saleProfit;
+  }, 0);
 
   const handleCreateSale = async (saleData: any) => {
     try {
@@ -130,10 +149,10 @@ export const SalesManagement: React.FC = () => {
       await loadSales();
       await loadProducts(); // Refresh products to update stock
       setShowPOSModal(false);
-      alert('Penjualan berhasil disimpan');
+      showToast('Penjualan berhasil disimpan');
     } catch (error) {
       console.error('Error creating sale:', error);
-      alert('Gagal menyimpan penjualan');
+      showToast('Gagal menyimpan penjualan', false);
     }
   };
 
@@ -148,11 +167,16 @@ export const SalesManagement: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {toast && (
+        <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg text-white text-sm font-medium ${toast.ok ? 'bg-green-500' : 'bg-red-500'}`}>
+          {toast.msg}
+        </div>
+      )}
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Manajemen Penjualan</h1>
-          <p className="text-gray-600">Kelola transaksi dan penjualan toko Anda</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Manajemen Penjualan</h1>
+          <p className="text-gray-600 dark:text-gray-400">Kelola transaksi dan penjualan toko Anda</p>
         </div>
         <button
           onClick={() => setShowPOSModal(true)}
@@ -165,48 +189,57 @@ export const SalesManagement: React.FC = () => {
 
       {/* Sales Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border border-gray-100 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Penjualan</p>
-              <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalSales)}</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Penjualan</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{formatCurrency(totalSales)}</p>
             </div>
             <ShoppingCart className="h-8 w-8 text-green-600" />
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border border-gray-100 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Jumlah Transaksi</p>
-              <p className="text-2xl font-bold text-gray-900">{filteredSales.length}</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Jumlah Transaksi</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{filteredSales.length}</p>
             </div>
             <Receipt className="h-8 w-8 text-blue-600" />
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border border-gray-100 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Rata-rata Transaksi</p>
-              <p className="text-2xl font-bold text-gray-900">{formatCurrency(averageTransaction)}</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Rata-rata Transaksi</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{formatCurrency(averageTransaction)}</p>
             </div>
             <CreditCard className="h-8 w-8 text-purple-600" />
           </div>
+          <div className="mt-2 flex items-center text-sm">
+            <BarChart3 className="h-3.5 w-3.5 text-gray-400 mr-1" />
+            <span className="text-gray-500 dark:text-gray-400">
+              {avgItemsPerTransaction} item/transaksi · {filteredSales.length} transaksi
+            </span>
+          </div>
         </div>
-        <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border border-gray-100 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Keuntungan</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {formatCurrency(totalSales * 0.2)} {/* Estimasi 20% margin */}
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Keuntungan Kotor</p>
+              <p className={`text-2xl font-bold ${totalProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {formatCurrency(totalProfit)}
               </p>
             </div>
-            <Calendar className="h-8 w-8 text-orange-600" />
+            <TrendingUp className="h-8 w-8 text-green-600" />
+          </div>
+          <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+            {totalItemsSold} total item terjual
           </div>
         </div>
       </div>
 
       {/* Search and Filters */}
-      <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-100 dark:border-gray-700">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -215,13 +248,13 @@ export const SalesManagement: React.FC = () => {
               placeholder="Cari berdasarkan nama pelanggan atau nomor invoice..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
             />
           </div>
           <select
             value={selectedDateRange}
             onChange={(e) => setSelectedDateRange(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
           >
             <option value="all">Semua Waktu</option>
             <option value="today">Hari Ini</option>
@@ -232,48 +265,55 @@ export const SalesManagement: React.FC = () => {
       </div>
 
       {/* Sales Table */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50">
+            <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Invoice
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Pelanggan
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Tanggal
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Items
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Total
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Pembayaran
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+              {filteredSales.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                    Tidak ada transaksi ditemukan
+                  </td>
+                </tr>
+              )}
               {filteredSales.map((sale) => (
-                <tr key={sale.id} className="hover:bg-gray-50">
+                <tr key={sale.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{sale.invoice_number}</div>
+                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{sale.invoice_number}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
-                      <div className="text-sm font-medium text-gray-900">{sale.customer_name}</div>
-                      <div className="text-sm text-gray-500">{sale.customer_phone}</div>
+                      <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{sale.customer_name}</div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">{sale.customer_phone}</div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
+                    <div className="text-sm text-gray-900 dark:text-gray-100">
                       {new Date(sale.sale_date).toLocaleDateString('id-ID')}
                     </div>
-                    <div className="text-sm text-gray-500">
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
                       {new Date(sale.sale_date).toLocaleTimeString('id-ID', { 
                         hour: '2-digit', 
                         minute: '2-digit' 
@@ -281,15 +321,15 @@ export const SalesManagement: React.FC = () => {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
+                    <div className="text-sm text-gray-900 dark:text-gray-100">
                       {sale.items?.length || 0} item{(sale.items?.length || 0) > 1 ? 's' : ''}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
+                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
                       {formatCurrency(sale.total_amount)}
                     </div>
-                    <div className="text-sm text-gray-500">
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
                       Subtotal: {formatCurrency(sale.subtotal)}
                     </div>
                   </td>
@@ -345,10 +385,14 @@ const POSModal: React.FC<{
   );
 
   const addToCart = (product: Product) => {
+    if (product.stock_quantity === 0) return;
     const existingItem = cart.find(item => item.productId === product.id);
+    const currentQty = existingItem?.quantity || 0;
+    if (currentQty >= product.stock_quantity) return;
+    const price = Number(product.selling_price) || 0;
     if (existingItem) {
-      setCart(cart.map(item => 
-        item.productId === product.id 
+      setCart(cart.map(item =>
+        item.productId === product.id
           ? { ...item, quantity: item.quantity + 1, total: (item.quantity + 1) * item.price }
           : item
       ));
@@ -356,9 +400,9 @@ const POSModal: React.FC<{
       setCart([...cart, {
         productId: product.id,
         productName: product.name,
-        price: product.selling_price,
+        price,
         quantity: 1,
-        total: product.selling_price
+        total: price
       }]);
     }
   };
@@ -367,16 +411,19 @@ const POSModal: React.FC<{
     if (newQuantity <= 0) {
       setCart(cart.filter(item => item.productId !== productId));
     } else {
-      setCart(cart.map(item => 
-        item.productId === productId 
-          ? { ...item, quantity: newQuantity, total: newQuantity * item.price }
+      const product = products.find(p => p.id === productId);
+      const maxQty = product?.stock_quantity ?? Infinity;
+      const clamped = Math.min(newQuantity, maxQty);
+      setCart(cart.map(item =>
+        item.productId === productId
+          ? { ...item, quantity: clamped, total: clamped * item.price }
           : item
       ));
     }
   };
 
-  const subtotal = cart.reduce((sum, item) => sum + item.total, 0);
-  const tax = subtotal * 0.1; // 10% tax
+  const subtotal = cart.reduce((sum, item) => sum + (Number(item.total) || 0), 0);
+  const tax = subtotal * 0.1;
   const total = subtotal + tax;
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -394,19 +441,19 @@ const POSModal: React.FC<{
     });
   };
 
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: number | string | null | undefined) => {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
       currency: 'IDR'
-    }).format(amount);
+    }).format(Number(amount) || 0);
   };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-gray-800 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Point of Sale</h2>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Point of Sale</h2>
             <button
               onClick={onClose}
               className="text-gray-500 hover:text-gray-700"
@@ -426,38 +473,56 @@ const POSModal: React.FC<{
                     placeholder="Cari produk atau scan barcode..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 gap-2 max-h-80 overflow-y-auto">
-                {filteredProducts.map((product) => (
-                  <div
-                    key={product.id}
-                    className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
-                    onClick={() => addToCart(product)}
-                  >
-                    <div className="flex-1">
-                      <div className="font-medium text-gray-900">{product.name}</div>
-                      <div className="text-sm text-gray-500">{product.category_name}</div>
-                      <div className="text-sm font-medium text-green-600">
-                        {formatCurrency(product.selling_price)}
+                {filteredProducts.length === 0 ? (
+                  <p className="text-center text-gray-500 dark:text-gray-400 py-6">Produk tidak ditemukan</p>
+                ) : (
+                  filteredProducts.map((product) => {
+                    const cartItem = cart.find(i => i.productId === product.id);
+                    const isOutOfStock = product.stock_quantity === 0;
+                    const isMaxReached = cartItem !== undefined && cartItem.quantity >= product.stock_quantity;
+                    return (
+                      <div
+                        key={product.id}
+                        className={`flex items-center justify-between p-3 border rounded-lg transition-colors ${
+                          isOutOfStock || isMaxReached
+                            ? 'border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 opacity-60 cursor-not-allowed'
+                            : 'border-gray-200 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-pointer'
+                        }`}
+                        onClick={() => !isOutOfStock && !isMaxReached && addToCart(product)}
+                      >
+                        <div className="flex-1">
+                          <div className="font-medium text-gray-900 dark:text-gray-100">{product.name}</div>
+                          <div className="text-sm text-gray-500 dark:text-gray-400">{product.category_name}</div>
+                          <div className="text-sm font-medium text-green-600">
+                            {formatCurrency(product.selling_price)}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className={`text-sm font-medium ${isOutOfStock ? 'text-red-500' : 'text-gray-500 dark:text-gray-400'}`}>
+                            {isOutOfStock ? 'Habis' : `Stok: ${product.stock_quantity}`}
+                          </div>
+                          {cartItem && !isOutOfStock && (
+                            <div className="text-xs text-blue-600">Di keranjang: {cartItem.quantity}</div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      Stok: {product.stock_quantity}
-                    </div>
-                  </div>
-                ))}
+                    );
+                  })
+                )}
               </div>
             </div>
 
             {/* Cart and Checkout */}
             <div>
               <div className="mb-4">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Keranjang</h3>
-                <div className="border border-gray-200 rounded-lg p-4 max-h-60 overflow-y-auto">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Keranjang</h3>
+                <div className="border border-gray-200 dark:border-gray-600 rounded-lg p-4 max-h-60 overflow-y-auto dark:bg-gray-700/30">
                   {cart.length === 0 ? (
                     <p className="text-gray-500 text-center py-4">Keranjang kosong</p>
                   ) : (
@@ -466,7 +531,7 @@ const POSModal: React.FC<{
                         <div key={item.productId} className="flex items-center justify-between">
                           <div className="flex-1">
                             <div className="font-medium text-sm">{item.productName}</div>
-                            <div className="text-sm text-gray-500">
+                            <div className="text-sm text-gray-500 dark:text-gray-400">
                               {formatCurrency(item.price)} x {item.quantity}
                             </div>
                           </div>
@@ -497,38 +562,38 @@ const POSModal: React.FC<{
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Nama Pelanggan
                   </label>
                   <input
                     type="text"
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Nomor Telepon
                   </label>
                   <input
                     type="tel"
                     value={customerPhone}
                     onChange={(e) => setCustomerPhone(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Metode Pembayaran
                   </label>
                   <select
                     value={paymentMethod}
                     onChange={(e) => setPaymentMethod(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                   >
                     <option value="cash">Tunai</option>
                     <option value="transfer">Transfer Bank</option>

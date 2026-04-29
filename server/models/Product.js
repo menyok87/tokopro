@@ -1,11 +1,11 @@
-const { pool } = require('../database/connection');
+import { pool } from '../database/connection.js';
 
 class Product {
   static async getAll() {
-    const [rows] = await pool.execute(`
-      SELECT p.*, c.name as category_name, s.name as supplier_name 
-      FROM products p 
-      LEFT JOIN categories c ON p.category_id = c.id 
+    const { rows } = await pool.query(`
+      SELECT p.*, c.name as category_name, s.name as supplier_name
+      FROM products p
+      LEFT JOIN categories c ON p.category_id = c.id
       LEFT JOIN suppliers s ON p.supplier_id = s.id
       ORDER BY p.name
     `);
@@ -13,88 +13,90 @@ class Product {
   }
 
   static async getById(id) {
-    const [rows] = await pool.execute(`
-      SELECT p.*, c.name as category_name, s.name as supplier_name 
-      FROM products p 
-      LEFT JOIN categories c ON p.category_id = c.id 
+    const { rows } = await pool.query(`
+      SELECT p.*, c.name as category_name, s.name as supplier_name
+      FROM products p
+      LEFT JOIN categories c ON p.category_id = c.id
       LEFT JOIN suppliers s ON p.supplier_id = s.id
-      WHERE p.id = ?
+      WHERE p.id = $1
     `, [id]);
     return rows[0];
   }
 
   static async create(productData) {
     const {
-      name, category_id, barcode, description, cost_price, 
+      name, category_id, barcode, description, cost_price,
       selling_price, stock_quantity, min_stock_level, supplier_id
     } = productData;
 
-    const [result] = await pool.execute(`
-      INSERT INTO products 
+    const { rows } = await pool.query(`
+      INSERT INTO products
       (name, category_id, barcode, description, cost_price, selling_price, stock_quantity, min_stock_level, supplier_id)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      RETURNING id
     `, [name, category_id, barcode, description, cost_price, selling_price, stock_quantity, min_stock_level, supplier_id]);
 
-    return result.insertId;
+    return rows[0].id;
   }
 
   static async update(id, productData) {
     const {
-      name, category_id, barcode, description, cost_price, 
+      name, category_id, barcode, description, cost_price,
       selling_price, stock_quantity, min_stock_level, supplier_id
     } = productData;
 
-    await pool.execute(`
-      UPDATE products 
-      SET name = ?, category_id = ?, barcode = ?, description = ?, 
-          cost_price = ?, selling_price = ?, stock_quantity = ?, 
-          min_stock_level = ?, supplier_id = ?, updated_at = CURRENT_TIMESTAMP
-      WHERE id = ?
+    await pool.query(`
+      UPDATE products
+      SET name = $1, category_id = $2, barcode = $3, description = $4,
+          cost_price = $5, selling_price = $6, stock_quantity = $7,
+          min_stock_level = $8, supplier_id = $9, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $10
     `, [name, category_id, barcode, description, cost_price, selling_price, stock_quantity, min_stock_level, supplier_id, id]);
 
     return true;
   }
 
   static async delete(id) {
-    await pool.execute('DELETE FROM products WHERE id = ?', [id]);
+    await pool.query('DELETE FROM products WHERE id = $1', [id]);
     return true;
   }
 
   static async updateStock(id, newStock, movementType = 'adjustment', referenceType = 'adjustment', userId = null) {
-    const connection = await pool.getConnection();
-    
-    try {
-      await connection.beginTransaction();
+    const client = await pool.connect();
 
-      // Get current stock
-      const [currentProduct] = await connection.execute('SELECT stock_quantity FROM products WHERE id = ?', [id]);
+    try {
+      await client.query('BEGIN');
+
+      const { rows: currentProduct } = await client.query(
+        'SELECT stock_quantity FROM products WHERE id = $1', [id]
+      );
       const currentStock = currentProduct[0].stock_quantity;
       const quantity = newStock - currentStock;
 
-      // Update product stock
-      await connection.execute('UPDATE products SET stock_quantity = ? WHERE id = ?', [newStock, id]);
+      await client.query(
+        'UPDATE products SET stock_quantity = $1 WHERE id = $2', [newStock, id]
+      );
 
-      // Record stock movement
-      await connection.execute(`
+      await client.query(`
         INSERT INTO stock_movements (product_id, movement_type, quantity, reference_type, user_id)
-        VALUES (?, ?, ?, ?, ?)
+        VALUES ($1, $2, $3, $4, $5)
       `, [id, movementType, Math.abs(quantity), referenceType, userId]);
 
-      await connection.commit();
+      await client.query('COMMIT');
       return true;
     } catch (error) {
-      await connection.rollback();
+      await client.query('ROLLBACK');
       throw error;
     } finally {
-      connection.release();
+      client.release();
     }
   }
 
   static async getLowStock() {
-    const [rows] = await pool.execute(`
-      SELECT p.*, c.name as category_name 
-      FROM products p 
-      LEFT JOIN categories c ON p.category_id = c.id 
+    const { rows } = await pool.query(`
+      SELECT p.*, c.name as category_name
+      FROM products p
+      LEFT JOIN categories c ON p.category_id = c.id
       WHERE p.stock_quantity <= p.min_stock_level
       ORDER BY p.stock_quantity ASC
     `);
@@ -102,4 +104,4 @@ class Product {
   }
 }
 
-module.exports = Product;
+export default Product;

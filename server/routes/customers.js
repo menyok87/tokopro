@@ -1,12 +1,24 @@
-const express = require('express');
+import express from 'express';
+import Customer from '../models/Customer.js';
+import { requireRole } from '../middleware/auth.js';
+
 const router = express.Router();
-const Customer = require('../models/Customer');
 
 // Get all customers
 router.get('/', async (req, res) => {
   try {
     const customers = await Customer.getAll();
     res.json(customers);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Find customer by phone (must be before /:id)
+router.get('/search/phone/:phone', async (req, res) => {
+  try {
+    const customer = await Customer.findByPhone(req.params.phone);
+    res.json(customer || null);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -36,8 +48,8 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Update customer
-router.put('/:id', async (req, res) => {
+// Update customer (admin & manager only)
+router.put('/:id', requireRole(['admin', 'manager']), async (req, res) => {
   try {
     await Customer.update(req.params.id, req.body);
     const customer = await Customer.getById(req.params.id);
@@ -47,21 +59,11 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// Delete customer
-router.delete('/:id', async (req, res) => {
+// Delete customer (admin only)
+router.delete('/:id', requireRole(['admin']), async (req, res) => {
   try {
     await Customer.delete(req.params.id);
     res.json({ message: 'Customer deleted successfully' });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Find customer by phone
-router.get('/search/phone/:phone', async (req, res) => {
-  try {
-    const customer = await Customer.findByPhone(req.params.phone);
-    res.json(customer || null);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -77,4 +79,4 @@ router.get('/:id/sales', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

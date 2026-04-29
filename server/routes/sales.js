@@ -1,13 +1,36 @@
-const express = require('express');
+import express from 'express';
+import Sale from '../models/Sale.js';
+
 const router = express.Router();
-const Sale = require('../models/Sale');
 
 // Get all sales
 router.get('/', async (req, res) => {
   try {
     const { limit = 100, offset = 0 } = req.query;
-    const sales = await Sale.getAll(parseInt(limit), parseInt(offset));
+    const sales = await Sale.getAll(parseInt(limit), parseInt(offset), req.user.id, req.user.role);
     res.json(sales);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get sales by date range (must be before /:id)
+router.get('/reports/date-range', async (req, res) => {
+  try {
+    const { start_date, end_date } = req.query;
+    const sales = await Sale.getSalesByDateRange(start_date, end_date);
+    res.json(sales);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get sales statistics (must be before /:id)
+router.get('/reports/stats', async (req, res) => {
+  try {
+    const { start_date, end_date } = req.query;
+    const stats = await Sale.getSalesStats(start_date, end_date);
+    res.json(stats);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -29,7 +52,7 @@ router.get('/:id', async (req, res) => {
 // Create new sale
 router.post('/', async (req, res) => {
   try {
-    const saleId = await Sale.create(req.body);
+    const saleId = await Sale.create({ ...req.body, user_id: req.user.id });
     const sale = await Sale.getById(saleId);
     res.status(201).json(sale);
   } catch (error) {
@@ -37,26 +60,4 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Get sales by date range
-router.get('/reports/date-range', async (req, res) => {
-  try {
-    const { start_date, end_date } = req.query;
-    const sales = await Sale.getSalesByDateRange(start_date, end_date);
-    res.json(sales);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Get sales statistics
-router.get('/reports/stats', async (req, res) => {
-  try {
-    const { start_date, end_date } = req.query;
-    const stats = await Sale.getSalesStats(start_date, end_date);
-    res.json(stats);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-module.exports = router;
+export default router;

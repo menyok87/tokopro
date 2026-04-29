@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:3001/api';
+const API_BASE_URL = 'https://tokopro.keuangan99.com/api';
 
 class ApiService {
   static getAuthToken() {
@@ -217,6 +217,40 @@ class ApiService {
 
   static async getExpenseCategories() {
     return this.request('/expenses/categories/all');
+  }
+
+  // Categories
+  static async getCategories() {
+    return this.request('/categories');
+  }
+
+  static async createCategory(data) {
+    return this.request('/categories', { method: 'POST', body: data });
+  }
+
+  static async updateCategory(id, data) {
+    return this.request(`/categories/${id}`, { method: 'PUT', body: data });
+  }
+
+  static async deleteCategory(id) {
+    return this.request(`/categories/${id}`, { method: 'DELETE' });
+  }
+
+  // Users (admin only)
+  static async getUsers() {
+    return this.request('/users');
+  }
+
+  static async createUser(userData) {
+    return this.request('/users', { method: 'POST', body: userData });
+  }
+
+  static async updateUser(id, userData) {
+    return this.request(`/users/${id}`, { method: 'PUT', body: userData });
+  }
+
+  static async deleteUser(id) {
+    return this.request(`/users/${id}`, { method: 'DELETE' });
   }
 
   // Health check

@@ -81,7 +81,7 @@ const AuthContext = createContext<{
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
-  const API_BASE_URL = 'http://localhost:3001/api';
+  const API_BASE_URL = 'https://tokopro.keuangan99.com/api';
 
   // Check if user is authenticated on app load
   useEffect(() => {
